@@ -1,0 +1,110 @@
+using System;
+using GameFramework.AOT;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
+
+namespace GameFramework.Hot
+{
+    /// <summary>
+    /// 输入模块
+    /// </summary>
+    public class GFInput : GFBaseModule
+    {
+        private InputActionAsset asset;
+
+        void Awake()
+        {
+            FindAnyObjectByType<InputSystemUIInputModule>().transform.SetParent(transform);
+
+            var playerInput = gameObject.AddComponent<PlayerInput>();
+            playerInput.notificationBehavior = PlayerNotifications.InvokeUnityEvents;
+
+            // asset = ScriptableObject.CreateInstance<InputActionAsset>();
+            asset = GFGlobal.Resource.LoadAssetSync<InputActionAsset>(GFGlobal.Config.inputActionAssetPath, false);
+            asset.Enable();
+            playerInput.actions = asset;
+        }
+
+        public InputAction GetAction(string mapName, string actionName)
+        {
+            var actionMap = asset.FindActionMap(mapName);
+            if (actionMap == null)
+            {
+                Log.Error($"[Input] map {mapName} not found");
+                return null;
+            }
+            var action = actionMap.FindAction(actionName);
+            if (action == null)
+            {
+                Log.Error($"[Input] action {actionName} not found");
+                return null;
+            }
+            return action;
+        }
+
+        public void SetMapEnable(string mapName, bool enable)
+        {
+            var actionMap = asset.FindActionMap(mapName);
+            if (actionMap == null)
+            {
+                Log.Error($"[Input] map {mapName} not found");
+                return;
+            }
+
+            if (enable)
+                actionMap.Enable();
+            else
+                actionMap.Disable();
+        }
+
+        public void SetActionEnable(string mapName, string actionName, bool enable)
+        {
+            var action = GetAction(mapName, actionName);
+            if (action == null)
+                return;
+
+            if (enable)
+                action.Enable();
+            else
+                action.Disable();
+        }
+
+        public void RegisterAction(
+            string mapName,
+            string actionName,
+            Action<InputAction.CallbackContext> started = null,
+            Action<InputAction.CallbackContext> performed = null,
+            Action<InputAction.CallbackContext> canceled = null)
+        {
+            var action = GetAction(mapName, actionName);
+            if (action == null)
+                return;
+
+            if (performed != null)
+                action.performed += performed;
+            if (canceled != null)
+                action.canceled += canceled;
+            if (started != null)
+                action.started += started;
+        }
+
+        public void UnregisterAction(
+            string mapName,
+            string actionName,
+            Action<InputAction.CallbackContext> started = null,
+            Action<InputAction.CallbackContext> performed = null,
+            Action<InputAction.CallbackContext> canceled = null)
+        {
+            var action = GetAction(mapName, actionName);
+            if (action == null)
+                return;
+
+            if (performed != null)
+                action.performed -= performed;
+            if (canceled != null)
+                action.canceled -= canceled;
+            if (started != null)
+                action.started -= started;
+        }
+    }
+}
