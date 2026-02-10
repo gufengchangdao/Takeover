@@ -8,6 +8,7 @@ namespace GameFramework.Hot
     public class GFGlobal : MonoBehaviour
     {
         public static GameConfig Config { get; private set; }
+        public static GFSave Save { get; private set; }
         public static GFReferencePool ReferencePool { get; private set; }
         public static GFEvent Event { get; private set; }
         public static GFTimer Timer { get; private set; }
@@ -54,6 +55,7 @@ namespace GameFramework.Hot
 
         void Update()
         {
+            Save.ModuleUpdate();
             ReferencePool.ModuleUpdate();
             Event.ModuleUpdate();
             Timer.ModuleUpdate();
@@ -69,6 +71,7 @@ namespace GameFramework.Hot
 
         private void InitModuleComponents()
         {
+            Save = AddModuleComponent<GFSave>("Save");
             ReferencePool = AddModuleComponent<GFReferencePool>("ReferencePool");
             Event = AddModuleComponent<GFEvent>("Event");
             Timer = AddModuleComponent<GFTimer>("Timer");

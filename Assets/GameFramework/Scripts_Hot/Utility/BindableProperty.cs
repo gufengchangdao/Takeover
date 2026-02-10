@@ -24,7 +24,7 @@ namespace GameFramework.Hot
 
                 var oldValue = m_Value;
                 m_Value = value;
-                OnChange?.InvokeSafe(oldValue, value);
+                OnChange?.InvokeSafe(value, oldValue);
             }
         }
 

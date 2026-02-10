@@ -31,6 +31,12 @@ public partial class RectTransformEditor : DecoratorEditor
                 SetGameObjectCenter(false);
             GUILayout.EndHorizontal();
         }
+
+        if (targets.Length == 2)
+        {
+            if (GUILayout.Button("拷贝对象相对路径"))
+                CopyRelativePath();
+        }
     }
 
     public void ZeroLocalPositionWithPivotAdjustment(RectTransform rectTransform)
@@ -68,5 +74,42 @@ public partial class RectTransformEditor : DecoratorEditor
             else
                 list[i].Item1.localPosition = new Vector3(list[i].Item1.localPosition.x, cur);
         }
+    }
+
+    private void CopyRelativePath()
+    {
+        RectTransform go1 = (RectTransform)targets[0];
+        RectTransform go2 = (RectTransform)targets[1];
+
+        RectTransform parent = null;
+        RectTransform child = null;
+
+        if (go1.IsChildOf(go2))
+        {
+            parent = go2;
+            child = go1;
+        }
+        else if (go2.IsChildOf(go1))
+        {
+            parent = go1;
+            child = go2;
+        }
+
+        if (parent == null)
+            return; //两个对象不是父子级
+
+        string path = GetPath(child, parent);
+        EditorGUIUtility.systemCopyBuffer = path;
+    }
+
+    public static string GetPath(Transform transform, Transform parent = null)
+    {
+        string s = transform.name;
+        while (transform.parent != parent)
+        {
+            transform = transform.parent;
+            s = $"{transform.name}/{s}";
+        }
+        return s;
     }
 }

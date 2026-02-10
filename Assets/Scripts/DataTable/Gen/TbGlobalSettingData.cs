@@ -36,6 +36,10 @@ public partial class TbGlobalSettingData
     /// 默认界面预制件路径
     /// </summary>
      public string DefaultPanelPath => _data.DefaultPanelPath;
+    /// <summary>
+    /// 音频目录
+    /// </summary>
+     public string SoundPath => _data.SoundPath;
     
     public void ResolveRef(Tables tables)
     {
