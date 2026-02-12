@@ -28,6 +28,7 @@ public static class Global
         SceneManager.sceneLoaded -= OnSceneLoaded;
         SceneManager.sceneLoaded += OnSceneLoaded;
 
+        GFGlobal.UI.OpenPanel<MainMenuControl>("HudSetting");
         GFGlobal.UI.OpenPanel<MainMenuControl>("MainMenu");
         GFGlobal.Sound.PlayMusic("musicMenuClass.mp3");
         // InLevel = true;

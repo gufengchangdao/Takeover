@@ -19,14 +19,10 @@ public abstract class DecoratorEditor : UnityEditor.Editor
     /// Type object for the internally used (decorated) editor.
     /// </summary>
     private System.Type decoratedEditorType;
-
     private UnityEditor.Editor editorInstance;
-
     #endregion
 
-    private static Dictionary<string, MethodInfo> decoratedMethods = new Dictionary<string, MethodInfo>();
-
-    private static Assembly editorAssembly = Assembly.GetAssembly(typeof(UnityEditor.Editor));
+    private Dictionary<string, MethodInfo> decoratedMethods = new Dictionary<string, MethodInfo>();
 
     protected UnityEditor.Editor EditorInstance
     {
@@ -124,20 +120,18 @@ public abstract class DecoratorEditor : UnityEditor.Editor
         if (EditorInstance == null)
             return;
 
-        MethodInfo method;
 
         // Add MethodInfo to cache
-        if (!decoratedMethods.ContainsKey(methodName))
+        string key = EditorInstance.GetType() + "." + methodName;
+        if (!decoratedMethods.TryGetValue(key, out var method))
         {
             var flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
-
-            method = decoratedEditorType.GetMethod(methodName, flags);
-            if (method != null)
-                decoratedMethods[methodName] = method;
-        }
-        else
-        {
-            method = decoratedMethods[methodName];
+            var m = EditorInstance.GetType().GetMethod(methodName, flags);
+            if (m != null && m.GetParameters().Length == 0)
+            {
+                method = m;
+                decoratedMethods[key] = m;
+            }
         }
 
         method?.Invoke(EditorInstance, EMPTY_ARRAY);

@@ -15,16 +15,15 @@ namespace Takeover
 
             musicSlider.value = GFGlobal.Sound.MusicVolume;
             UpdateSoundSliderMask(musicSlider);
-            musicSlider.onDelayValueChanged.AddListener((v) =>
+            musicSlider.onValueChanged.AddListener((v) =>
             {
-                Log.Error("值更改" + v);
                 GFGlobal.Sound.MusicVolume = v;
                 UpdateSoundSliderMask(musicSlider);
             });
 
             sfxSlider.value = GFGlobal.Sound.SFXVolume;
             UpdateSoundSliderMask(sfxSlider);
-            sfxSlider.onDelayValueChanged.AddListener((v) =>
+            sfxSlider.onValueChanged.AddListener((v) =>
             {
                 GFGlobal.Sound.SFXVolume = v;
                 UpdateSoundSliderMask(sfxSlider);

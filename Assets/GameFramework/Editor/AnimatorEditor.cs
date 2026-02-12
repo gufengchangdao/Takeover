@@ -8,7 +8,6 @@ public partial class AnimatorEditor : DecoratorEditor
     {
         base.OnInspectorGUI();
 
-
         var animator = (Animator)target;
         CreateAnimatiorControl(animator);
         ShowPanelAnimationButton(animator);

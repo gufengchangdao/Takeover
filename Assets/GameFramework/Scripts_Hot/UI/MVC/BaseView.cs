@@ -69,6 +69,8 @@ namespace GameFramework.Hot
             cloneSourceIds.Add(id);
             return newNode;
         }
+
+        public abstract void Close(bool immediate = false);
     }
 
     public class BaseView<C> : AbstractBaseView where C : BaseControl
@@ -86,7 +88,7 @@ namespace GameFramework.Hot
                 Log.Error("[UI] control类型不对" + control.GetType() + "     " + typeof(C));
         }
 
-        public void Close(bool immediate = false)
+        public override void Close(bool immediate = false)
         {
             Control.Close(immediate);
         }

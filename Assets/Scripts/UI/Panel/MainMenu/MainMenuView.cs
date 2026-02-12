@@ -6,7 +6,6 @@ namespace Takeover
     {
         public GFButton btnStart;
         public GFButton btnExit;
-        public GFButton btnSetting;
 
         public override void OnInit(object userData)
         {
@@ -18,10 +17,6 @@ namespace Takeover
             btnExit.onClick.AddEventListener((e) =>
             {
                 Global.Quit();
-            });
-            btnSetting.onClick.AddEventListener((e) =>
-            {
-                GFGlobal.UI.OpenPanel<SettingControl>("Setting");
             });
         }
     }

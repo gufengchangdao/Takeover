@@ -65,6 +65,10 @@ namespace GameFramework.Hot
             UICamera.clearFlags = CameraClearFlags.Nothing; // 显示后面的主相机内容
             canvas.worldCamera = UICamera;
 
+            var cameraData = UICamera.gameObject.AddComponent<UniversalAdditionalCameraData>();
+            cameraData.SetRenderer(1); // UI界面专门的RendererData，可以用模糊效果
+            cameraData.volumeLayerMask = LayerMask.GetMask("UI");
+
             UpdateCursorVisible();
         }
 
