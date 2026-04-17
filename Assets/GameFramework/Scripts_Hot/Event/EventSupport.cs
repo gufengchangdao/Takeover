@@ -4,103 +4,216 @@ using GameFramework.AOT;
 
 namespace GameFramework.Hot
 {
-    /// <summary>
-    /// 让对象支持事件系统，并且可以在检视器面板可视化
-    /// </summary>
+    // 事件回调
+    public delegate void GameEventHandler<in TEvent>(object sender, TEvent e) where TEvent : GameEvent;
+
     public class EventSupport : IRecyclable
     {
-        private Dictionary<Type, LinkedList<EventHandler<GameEvent>>> m_Event = new();
-
-#if UNITY_EDITOR
-        private void __UpdateEventList()
-        {
-            __CacheEvent.Clear();
-            foreach (var entry in m_Event)
-            {
-                LinkedList<string> methodList = new();
-                foreach (var h in entry.Value)
-                {
-                    methodList.AddLast($"{h.Method.DeclaringType?.Name}.{h.Method.Name}");
-                }
-                __CacheEvent[entry.Key.Name] = methodList;
-            }
-        }
-
-        private Dictionary<string, LinkedList<string>> __CacheEvent = new();
-#endif
+        private readonly Dictionary<Type, IEventBucket> m_EventBuckets = new Dictionary<Type, IEventBucket>();
 
         public static EventSupport Create()
         {
             return TypeReferencePool.GetOrNew<EventSupport>();
         }
 
-        public void Subscribe<T>(EventHandler<GameEvent> handler) where T : GameEvent
+        public void Subscribe<TEvent>(GameEventHandler<TEvent> handler, int priority = 0) where TEvent : GameEvent
         {
-            Subscribe(typeof(T), handler);
-        }
-
-        public void Subscribe(Type eventType, EventHandler<GameEvent> handler)
-        {
-            if (!m_Event.TryGetValue(eventType, out var handlerList))
-            {
-                handlerList = new();
-                m_Event[eventType] = handlerList;
-            }
-
-            foreach (var h in handlerList)
-            {
-                if (h == handler)
-                {
-                    Log.Warning("[Event] Event {0} already registered :{1}.{2}", eventType.Name, h.Method.DeclaringType?.Name, h.Method.Name);
-                    return; //已经添加过这个处理器了
-                }
-            }
-
-            handlerList.AddLast(handler);
-        }
-
-        public void Unsubscribe<T>(EventHandler<GameEvent> handler) where T : GameEvent
-        {
-            Unsubscribe(typeof(T), handler);
-        }
-
-        public void Unsubscribe(Type eventType, EventHandler<GameEvent> handler)
-        {
-            if (!m_Event.TryGetValue(eventType, out var handlerList))
+            if (handler == null)
                 return;
 
-            handlerList.Remove(handler);
-            if (handlerList.Count <= 0)
-                m_Event.Remove(eventType);
+            GetOrCreateBucket<TEvent>().Subscribe(handler, priority);
+        }
+
+        private EventBucket<TEvent> GetOrCreateBucket<TEvent>() where TEvent : GameEvent
+        {
+            Type eventType = typeof(TEvent);
+            if (m_EventBuckets.TryGetValue(eventType, out IEventBucket bucket))
+                return (EventBucket<TEvent>)bucket;
+            EventBucket<TEvent> newBucket = new EventBucket<TEvent>();
+            m_EventBuckets.Add(eventType, newBucket);
+            return newBucket;
+        }
+
+        public void Unsubscribe<TEvent>(GameEventHandler<TEvent> handler) where TEvent : GameEvent
+        {
+            if (handler == null)
+                return;
+
+            Type eventType = typeof(TEvent);
+            if (!m_EventBuckets.TryGetValue(eventType, out IEventBucket bucket))
+                return;
+
+            ((EventBucket<TEvent>)bucket).Unsubscribe(handler);
+
+            if (bucket.IsEmpty)
+                m_EventBuckets.Remove(eventType);
+        }
+
+        public void Fire<TEvent>(object sender, TEvent e) where TEvent : GameEvent
+        {
+            Fire(sender, (GameEvent)e);
         }
 
         public void Fire(object sender, GameEvent e)
         {
-            Type eventType = e.GetType();
-            if (!m_Event.TryGetValue(eventType, out var handlerList))
+            if (e == null)
                 return;
 
-            LinkedListNode<EventHandler<GameEvent>> current = handlerList.First;
-            while (current != null && current.Value != null)
+            Type eventType = e.GetType();
+            try
             {
-                var next = current.Next;
-                try
+                e.handled = false;
+                if (m_EventBuckets.TryGetValue(eventType, out IEventBucket bucket))
                 {
-                    current.Value(sender, e); //执行回调
+                    bucket.Dispatch(sender, e);
+                    if (bucket.IsEmpty)
+                        m_EventBuckets.Remove(eventType);
                 }
-                catch (Exception ex)
-                {
-                    Log.Error("[Event] Event {0} error : {1}", eventType.Name, ex);
-                }
-                current = next;
             }
-
-            TypeReferencePool.Recycle(e);
+            finally
+            {
+                TypeReferencePool.Recycle(e);
+            }
         }
 
         public void OnRecycle()
         {
-            m_Event.Clear();
+            m_EventBuckets.Clear();
+        }
+
+
+
+        private interface IEventBucket
+        {
+            bool IsEmpty { get; }
+
+            void Dispatch(object sender, GameEvent e);
+        }
+
+        private sealed class EventBucket<TEvent> : IEventBucket where TEvent : GameEvent
+        {
+            private readonly LinkedList<ListenerEntry> m_Listeners = new LinkedList<ListenerEntry>();
+            private readonly Type m_EventType = typeof(TEvent);
+            private int m_DispatchCount = 0;
+
+            public bool IsEmpty
+            {
+                get { return m_Listeners.Count == 0; }
+            }
+
+            public void Subscribe(GameEventHandler<TEvent> handler, int priority)
+            {
+                LinkedListNode<ListenerEntry> current = m_Listeners.First;
+                while (current != null)
+                {
+                    ListenerEntry entry = current.Value;
+                    if (!entry.Removed && entry.Handler == handler)
+                    {
+                        Log.Warning(
+                            "[Event] Event {0} already registered :{1}.{2}",
+                            m_EventType.Name,
+                            handler.Method.DeclaringType?.Name,
+                            handler.Method.Name);
+                        return;
+                    }
+
+                    if (priority > entry.Priority)
+                    {
+                        m_Listeners.AddBefore(current, new ListenerEntry(handler, priority));
+                        return;
+                    }
+
+                    current = current.Next;
+                }
+
+                m_Listeners.AddLast(new ListenerEntry(handler, priority));
+            }
+
+            public void Unsubscribe(GameEventHandler<TEvent> handler)
+            {
+                LinkedListNode<ListenerEntry> current = m_Listeners.First;
+                while (current != null)
+                {
+                    LinkedListNode<ListenerEntry> next = current.Next;
+                    ListenerEntry entry = current.Value;
+
+                    if (!entry.Removed && entry.Handler == handler)
+                    {
+                        if (m_DispatchCount > 0)
+                            entry.Removed = true;
+                        else
+                            m_Listeners.Remove(current);
+
+                        break;
+                    }
+
+                    current = next;
+                }
+
+                if (m_DispatchCount == 0)
+                    CleanupRemoved();
+            }
+
+            public void Dispatch(object sender, GameEvent e)
+            {
+                TEvent eventArgs = (TEvent)e;
+                m_DispatchCount++;
+                try
+                {
+                    LinkedListNode<ListenerEntry> current = m_Listeners.First;
+                    while (current != null && !eventArgs.handled)
+                    {
+                        // 先缓存 next，保证回调里反注册当前/后续监听时遍历仍然安全
+                        LinkedListNode<ListenerEntry> next = current.Next;
+                        ListenerEntry entry = current.Value;
+                        if (!entry.Removed)
+                        {
+                            try
+                            {
+                                entry.Handler(sender, eventArgs);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error("[Event] Event {0} error : {1}", m_EventType.Name, ex);
+                            }
+                        }
+                        current = next;
+                    }
+                }
+                finally
+                {
+                    m_DispatchCount--;
+
+                    if (m_DispatchCount == 0)
+                        CleanupRemoved();
+                }
+            }
+
+            private void CleanupRemoved()
+            {
+                LinkedListNode<ListenerEntry> current = m_Listeners.First;
+                while (current != null)
+                {
+                    LinkedListNode<ListenerEntry> next = current.Next;
+                    if (current.Value.Removed)
+                        m_Listeners.Remove(current);
+                    current = next;
+                }
+            }
+
+            private sealed class ListenerEntry
+            {
+                public readonly GameEventHandler<TEvent> Handler;
+                public readonly int Priority; //优先级越高越先执行
+                public bool Removed; //允许执行回调期间移除回调
+
+                public ListenerEntry(GameEventHandler<TEvent> handler, int priority)
+                {
+                    Handler = handler;
+                    Priority = priority;
+                    Removed = false;
+                }
+            }
         }
     }
 }

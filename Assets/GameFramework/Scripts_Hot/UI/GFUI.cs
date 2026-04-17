@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GameFramework.AOT;
+using NUnit.Compatibility;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
@@ -101,6 +102,7 @@ namespace GameFramework.Hot
 
         public void OpenPanel(Type controlType, string groupName, string assetPath, int guid = 0, object userData = null)
         {
+            Log.Info("Open UI Panel {0},{1},{2}", controlType.Name, groupName, assetPath);
             if (!uiGroups.ContainsKey(groupName))
             {
                 Log.Error("[UI] UI Group not found: {0}", groupName);

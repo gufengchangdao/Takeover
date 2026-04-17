@@ -1,6 +1,5 @@
 using GameFramework.Hot;
 using SimpleJSON;
-using UnityEngine;
 
 namespace Takeover
 {
@@ -24,9 +23,9 @@ namespace Takeover
             GFGlobal.Event.Subscribe<MusicVolumeChangeEvent>(OnMusicVolumeChange);
         }
 
-        private void OnMusicVolumeChange(object sender, GameEvent e)
+        private void OnMusicVolumeChange(object sender, MusicVolumeChangeEvent e)
         {
-            GFGlobal.Save.SetFloat(SaveKeyEnum.MusicVolume, ((MusicVolumeChangeEvent)e).musicVolume);
+            GFGlobal.Save.SetFloat(SaveKeyEnum.MusicVolume, e.musicVolume);
         }
 
         public void OnSave()

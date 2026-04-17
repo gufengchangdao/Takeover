@@ -11,24 +11,14 @@ namespace GameFramework.Hot
             m_EventSupport = EventSupport.Create();
         }
 
-        public void Subscribe<T>(EventHandler<GameEvent> handler) where T : GameEvent
+        public void Subscribe<TEvent>(GameEventHandler<TEvent> handler, int priority = 0) where TEvent : GameEvent
         {
-            Subscribe(typeof(T), handler);
+            m_EventSupport.Subscribe(handler, priority);
         }
 
-        public void Subscribe(Type eventType, EventHandler<GameEvent> handler)
+        public void Unsubscribe<TEvent>(GameEventHandler<TEvent> handler) where TEvent : GameEvent
         {
-            m_EventSupport.Subscribe(eventType, handler);
-        }
-
-        public void Unsubscribe<T>(EventHandler<GameEvent> handler) where T : GameEvent
-        {
-            Unsubscribe(typeof(T), handler);
-        }
-
-        public void Unsubscribe(Type eventType, EventHandler<GameEvent> handler)
-        {
-            m_EventSupport.Unsubscribe(eventType, handler);
+            m_EventSupport.Unsubscribe(handler);
         }
 
         public void Fire(object sender, GameEvent e)

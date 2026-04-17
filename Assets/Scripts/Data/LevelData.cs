@@ -1,14 +1,30 @@
+using System.Collections.Generic;
+using TableStructure;
+
 namespace Takeover
 {
-    public class LevelData
+    public class LevelData : IDataSaveLoad
     {
-        public int Gold { get; private set; }
-        public int Supply { get; private set; }
-        public int Magic { get; private set; }
+        public ECamp Camp { get; private set; }
 
-        public void Init()
+        /// <summary>
+        /// 关卡总数
+        /// </summary>
+        public int LevelCount { get; private set; }
+
+        public int CurrentLevel { get; private set; }
+
+        /// <summary>
+        /// 战胜过的关卡评级
+        /// </summary>
+        public List<int> LevelScore { get; private set; }
+
+        public void OnLoad()
         {
+        }
 
+        public void OnSave()
+        {
         }
     }
 }
