@@ -4,6 +4,7 @@ using GameFramework.AOT;
 using NUnit.Compatibility;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace GameFramework.Hot
@@ -69,8 +70,31 @@ namespace GameFramework.Hot
             var cameraData = UICamera.gameObject.AddComponent<UniversalAdditionalCameraData>();
             cameraData.SetRenderer(1); // UI界面专门的RendererData，可以用模糊效果
             cameraData.volumeLayerMask = LayerMask.GetMask("UI");
+            SceneManager.sceneLoaded += OnSceneLoaded;
 
             UpdateCursorVisible();
+        }
+
+        private void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        // 场景加载好后把UI相机挂到主相机的Stack里
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            Camera mainCamera = Camera.main;
+            var uiData = UICamera.GetUniversalAdditionalCameraData();
+            if (mainCamera == null)
+            {
+                uiData.renderType = CameraRenderType.Base;
+                return;
+            }
+
+            var mainData = mainCamera.GetUniversalAdditionalCameraData();
+            uiData.renderType = CameraRenderType.Overlay;
+            if (!mainData.cameraStack.Contains(UICamera))
+                mainData.cameraStack.Add(UICamera);
         }
 
         private void AddUIGruop(string name)
@@ -116,7 +140,8 @@ namespace GameFramework.Hot
                     return;
 
                 // 存一下，等面板关了再重新打开
-                waitOpenPanels.Add(name, new WaitOpenPanelInfo(controlType, groupName, assetPath, guid, userData));
+                waitOpenPanels[name] = new WaitOpenPanelInfo(controlType, groupName, assetPath, guid, userData);
+                return;
             }
 
             control = panelPool.Get(controlType);
@@ -127,19 +152,18 @@ namespace GameFramework.Hot
             control.OnInit(userData);
             panels.Add(name, control);
             if (needLoad)
-                GFGlobal.Resource.LoadAssetAsync<GameObject>(assetPath, OnPanelLoaded, name);
+                GFGlobal.Resource.LoadAssetAsync<GameObject>(assetPath, OnPanelLoaded, (name, userData));
             else
-                InitView(name, control.View.gameObject);
+                InitView(name, control.View.gameObject, userData);
         }
 
         private void OnPanelLoaded(GameObject prefab, object userData)
         {
-            string name = userData as string;
-            if (name != null && panels.ContainsKey(name)) //有可能面板已经关闭了
-                InitView(name, Instantiate(prefab));
+            if (userData is ValueTuple<string, object> data && panels.ContainsKey(data.Item1))
+                InitView(data.Item1, Instantiate(prefab), data.Item2);
         }
 
-        private void InitView(string name, GameObject viewGo)
+        private void InitView(string name, GameObject viewGo, object userData)
         {
             BaseControl control = panels[name];
             var group = uiGroups[control.UIGroup];
@@ -147,8 +171,7 @@ namespace GameFramework.Hot
             viewGo.SetActive(true);
 
             // 重置RectTransform属性，解决偏移问题
-            var rectTransform = viewGo.GetComponent<RectTransform>();
-            if (rectTransform != null)
+            if (viewGo.TryGetComponent<RectTransform>(out var rectTransform))
             {
                 rectTransform.anchorMin = Vector2.zero;
                 rectTransform.anchorMax = Vector2.one;
@@ -161,7 +184,7 @@ namespace GameFramework.Hot
             var view = viewGo.GetComponent<AbstractBaseView>();
             control.BindView(view);
             view.BindControl(control);
-            view.OnInit(null);
+            view.OnInit(userData);
 
             UpdateCursorVisible();
 

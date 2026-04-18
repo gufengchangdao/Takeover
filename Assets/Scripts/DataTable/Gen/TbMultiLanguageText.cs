@@ -33,8 +33,8 @@ public partial class TbMultiLanguageText
         }
     }
 
-    public System.Collections.Generic.Dictionary<string, MultiLanguageText> DataMap => _dataMap;
-    public System.Collections.Generic.List<MultiLanguageText> DataList => _dataList;
+    public System.Collections.Generic.IReadOnlyDictionary<string, MultiLanguageText> DataMap => _dataMap;
+    public System.Collections.Generic.IReadOnlyList<MultiLanguageText> DataList => _dataList;
 
     public MultiLanguageText GetOrDefault(string key) => _dataMap.TryGetValue(key, out var v) ? v : default;
     public MultiLanguageText Get(string key) => _dataMap[key];

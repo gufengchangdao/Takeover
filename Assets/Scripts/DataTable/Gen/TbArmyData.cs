@@ -36,8 +36,8 @@ public partial class TbArmyData
         }
     }
 
-    public System.Collections.Generic.Dictionary<string, ArmyData> DataMap => _dataMap;
-    public System.Collections.Generic.List<ArmyData> DataList => _dataList;
+    public System.Collections.Generic.IReadOnlyDictionary<string, ArmyData> DataMap => _dataMap;
+    public System.Collections.Generic.IReadOnlyList<ArmyData> DataList => _dataList;
 
     public ArmyData GetOrDefault(string key) => _dataMap.TryGetValue(key, out var v) ? v : default;
     public ArmyData Get(string key) => _dataMap[key];

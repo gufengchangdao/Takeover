@@ -1,9 +1,9 @@
 #if USE_LUBAN
 using TableStructure;
 #endif
-using SimpleJSON;
 using UnityEngine;
 using GameFramework.AOT;
+using SimpleJSON;
 
 namespace GameFramework.Hot
 {

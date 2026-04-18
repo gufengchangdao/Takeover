@@ -36,8 +36,8 @@ public partial class TbCastleData
         }
     }
 
-    public System.Collections.Generic.Dictionary<string, CastleData> DataMap => _dataMap;
-    public System.Collections.Generic.List<CastleData> DataList => _dataList;
+    public System.Collections.Generic.IReadOnlyDictionary<string, CastleData> DataMap => _dataMap;
+    public System.Collections.Generic.IReadOnlyList<CastleData> DataList => _dataList;
 
     public CastleData GetOrDefault(string key) => _dataMap.TryGetValue(key, out var v) ? v : default;
     public CastleData Get(string key) => _dataMap[key];

@@ -9,6 +9,8 @@ namespace GameFramework.Hot
     {
         private HashSet<int> cloneSourceIds = new();
 
+        public event Action OnPanelClose;
+
         public abstract void BindControl(BaseControl control);
 
         public virtual void OnInit(object userData)
@@ -19,6 +21,10 @@ namespace GameFramework.Hot
 
         public virtual void OnRecycle()
         {
+            // 告知其他组件，移除一些监听
+            OnPanelClose.InvokeSafe();
+            OnPanelClose = null;
+
             // 回收拷贝出来的节点
             foreach (var node in GetComponentsInChildren<BaseUINode>(true))
             {

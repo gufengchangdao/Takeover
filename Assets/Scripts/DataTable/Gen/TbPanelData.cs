@@ -36,8 +36,8 @@ public partial class TbPanelData
         }
     }
 
-    public System.Collections.Generic.Dictionary<string, PanelData> DataMap => _dataMap;
-    public System.Collections.Generic.List<PanelData> DataList => _dataList;
+    public System.Collections.Generic.IReadOnlyDictionary<string, PanelData> DataMap => _dataMap;
+    public System.Collections.Generic.IReadOnlyList<PanelData> DataList => _dataList;
 
     public PanelData GetOrDefault(string key) => _dataMap.TryGetValue(key, out var v) ? v : default;
     public PanelData Get(string key) => _dataMap[key];

@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
+using GameFramework.Hot;
 using TableStructure;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Takeover
 {
-    public partial class Camp : MonoBehaviour
+    public class Camp : MonoBehaviour
     {
         [SerializeField]
         private ECamp m_CurCamp = ECamp.Green;
@@ -23,67 +27,110 @@ namespace Takeover
             }
         }
 
-        public List<Sprite> sprites = new();
+        [SerializeField]
+        private string assetPathBase;
 
-        public List<GameObject> prefabs = new();
+        [SerializeField]
+        private bool isPrefab;
+        [SerializeField]
+        private bool hasBroken;
 
         public event Action<ECamp> OnCampChange;
 
+        private bool _isBroken;
         public bool IsBroken
         {
             get
             {
-                if (!Application.isPlaying)
-                    return false;
-                if (!TryGetComponent(out UnitHealth unitHealth))
-                    return false;
-                return unitHealth.IsDead;
+                return _isBroken;
+            }
+            set
+            {
+                _isBroken = value;
+
+                if (_isBroken != value && hasBroken)
+                    UpdateCampSprite();
             }
         }
 
+        private string currentLoadingAssetPath;
+        private GameObject childNode;
+
         private void UpdateCampSprite()
         {
-            var oldSprite = transform.Find("Sprite");
-            if (oldSprite)
-                DestroyImmediate(oldSprite.gameObject);
+            string assetPath = assetPathBase;
+            if (hasBroken && IsBroken)
+                assetPath += "_broken";
+            assetPath += $"_{CurCamp.ToString().ToLower()}";
+            if (isPrefab)
+                assetPath += ".prefab";
+            else
+                assetPath += ".png";
+            if (currentLoadingAssetPath == assetPath)
+                return; //已经在请求了
 
-            string nameSuffix = "_" + CurCamp.ToString().ToLower();
-            string brokenSuffix = "_broken" + nameSuffix;
-            bool isBroken = IsBroken;
-
-            // 切换模型
-            foreach (var obj in prefabs)
+            currentLoadingAssetPath = assetPath;
+            if (!Application.isPlaying)
             {
-                if (!obj.name.ToLower().EndsWith(nameSuffix))
-                    continue;
-                bool isBrokenSprite = obj.name.ToLower().EndsWith(brokenSuffix);
-                if (isBroken == isBrokenSprite)
+                if (isPrefab)
                 {
-                    GameObject go = Instantiate(obj, transform);
-                    go.name = "Sprite";
-                    return;
+                    LoadPrefabInEditor(assetPath);
+                }
+                else
+                {
+                    LoadSpriteInEditor(assetPath);
                 }
             }
-
-            // 切换贴图
-            foreach (var sprite in sprites)
+            else
             {
-                if (!sprite.name.ToLower().EndsWith(nameSuffix))
-                    continue;
-                bool isBrokenSprite = sprite.name.ToLower().EndsWith(brokenSuffix);
-                if (isBroken == isBrokenSprite)
+                if (isPrefab)
+                    GFGlobal.Resource.LoadAssetAsync<GameObject>(assetPath, OnPrefabLoaded, assetPath);
+                else
+                    GFGlobal.Resource.LoadAssetAsync<Sprite>(assetPath, OnSpriteLoaded, assetPath);
+            }
+        }
+
+        private bool LoadCheck(object userdata)
+        {
+            if (!gameObject) //对象已经销毁
+                return false;
+            if (userdata as string != currentLoadingAssetPath)
+                return false;
+
+            currentLoadingAssetPath = null;
+            return true;
+        }
+
+        private void OnPrefabLoaded(GameObject obj, object userdata)
+        {
+            if (LoadCheck(userdata))
+            {
+                if (childNode)
+                    Destroy(childNode);
+                childNode = Instantiate(obj, transform);
+            }
+        }
+
+        private void OnSpriteLoaded(Sprite sprite, object userdata)
+        {
+            if (LoadCheck(userdata))
+            {
+                if (!childNode)
                 {
-                    var spriteRenderer = gameObject.GFGetOrAddComponent<SpriteRenderer>();
-                    spriteRenderer.sprite = sprite;
-                    return;
+                    childNode = new GameObject("Sprite", typeof(SpriteRenderer));
+                    childNode.transform.SetParent(transform, false);
                 }
+                childNode.GetComponent<SpriteRenderer>().sprite = sprite;
             }
         }
 
         void Start()
         {
-            UpdateCampSprite();
-            OnCampChange?.InvokeSafe(m_CurCamp);
+            if (currentLoadingAssetPath == null && !childNode)
+            {
+                UpdateCampSprite();
+                OnCampChange?.InvokeSafe(m_CurCamp);
+            }
         }
 
         void OnDestroy()
@@ -93,6 +140,39 @@ namespace Takeover
 
 
 #if UNITY_EDITOR
+        private void LoadPrefabInEditor(string assetPath)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+            currentLoadingAssetPath = null;
+            if (!prefab)
+            {
+                Debug.LogError($"Camp prefab not found: {assetPath}", this);
+                return;
+            }
+
+            if (childNode)
+                DestroyImmediate(childNode);
+            childNode = PrefabUtility.InstantiatePrefab(prefab, transform) as GameObject;
+        }
+
+        private void LoadSpriteInEditor(string assetPath)
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+            currentLoadingAssetPath = null;
+            if (!sprite)
+            {
+                Debug.LogError($"Camp sprite not found: {assetPath}", this);
+                return;
+            }
+
+            if (!childNode)
+            {
+                childNode = new GameObject("Sprite", typeof(SpriteRenderer));
+                childNode.transform.SetParent(transform, false);
+            }
+            childNode.GetComponent<SpriteRenderer>().sprite = sprite;
+        }
+
         private void SelectSameCampGameObject()
         {
             var cur = gameObject.GetComponent<Camp>().CurCamp;

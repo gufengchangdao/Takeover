@@ -12,12 +12,20 @@ namespace Takeover
             base.OnInit(userData);
             btnStart.onClick.AddEventListener((e) =>
             {
+                GFGlobal.UI.OpenPanel<CampaignSelectControl>();
                 Close();
             });
             btnExit.onClick.AddEventListener((e) =>
             {
                 Global.Quit();
             });
+        }
+
+        public override void OnRecycle()
+        {
+            btnStart.onClick.Clear();
+            btnExit.onClick.Clear();
+            base.OnRecycle();
         }
     }
 }

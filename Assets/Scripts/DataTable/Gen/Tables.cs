@@ -20,6 +20,10 @@ public partial class Tables
     /// </summary>
     public TbArmyData TbArmyData {get; }
     /// <summary>
+    /// 战役表
+    /// </summary>
+    public TbCampaignData TbCampaignData {get; }
+    /// <summary>
     /// 城堡表
     /// </summary>
     public TbCastleData TbCastleData {get; }
@@ -33,6 +37,7 @@ public partial class Tables
     {
         TbGlobalSettingData = new TbGlobalSettingData(loader("tbglobalsettingdata"));
         TbArmyData = new TbArmyData(loader("tbarmydata"));
+        TbCampaignData = new TbCampaignData(loader("tbcampaigndata"));
         TbCastleData = new TbCastleData(loader("tbcastledata"));
         TbMultiLanguageText = new TbMultiLanguageText(loader("tbmultilanguagetext"));
         TbPanelData = new TbPanelData(loader("tbpaneldata"));
@@ -43,6 +48,7 @@ public partial class Tables
     {
         TbGlobalSettingData.ResolveRef(this);
         TbArmyData.ResolveRef(this);
+        TbCampaignData.ResolveRef(this);
         TbCastleData.ResolveRef(this);
         TbMultiLanguageText.ResolveRef(this);
         TbPanelData.ResolveRef(this);
@@ -50,3 +56,4 @@ public partial class Tables
 }
 
 }
+

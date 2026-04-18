@@ -67,7 +67,10 @@ namespace GameFramework.Hot
         public virtual void OnUIDestroy()
         {
             if (View)
+            {
+                View.OnUIDestroy();
                 GameObject.Destroy(View.gameObject);
+            }
             View = null;
         }
 

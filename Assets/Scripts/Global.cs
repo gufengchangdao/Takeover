@@ -41,11 +41,14 @@ public static class Global
         SkillTree = new SkillTreeData();
         SkillTree.OnLoad();
         LevelData = new LevelData();
-        LevelData.OnLoad();
+        // LevelData.OnLoad();
 
         SceneManager.sceneLoaded -= OnSceneLoaded;
         SceneManager.sceneLoaded += OnSceneLoaded;
         Application.quitting += OnQuit;
+
+        // 初始化流程
+        GFGlobal.Procedure.Init(new LevelSelectProcedure());
 
         GFGlobal.UI.OpenPanel<HudSettingControl>();
         GFGlobal.UI.OpenPanel<MainMenuControl>();
