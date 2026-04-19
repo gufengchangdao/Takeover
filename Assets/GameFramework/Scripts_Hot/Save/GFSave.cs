@@ -19,7 +19,7 @@ namespace GameFramework.Hot
             PlayerPrefs.SetFloat(key, value);
         }
 
-        public float GetFloat(string key, float defaultValue)
+        public float GetFloat(string key, float defaultValue = 0)
         {
             return PlayerPrefs.GetFloat(key, defaultValue);
         }
@@ -29,7 +29,7 @@ namespace GameFramework.Hot
             PlayerPrefs.SetInt(key, value);
         }
 
-        public int GetInt(string key, int defaultValue)
+        public int GetInt(string key, int defaultValue = 0)
         {
             return PlayerPrefs.GetInt(key, defaultValue);
         }

@@ -2,7 +2,7 @@ namespace Takeover
 {
     public interface IDataSaveLoad
     {
-        void OnSave();
+        void OnSave(bool isQuit);
         void OnLoad();
     }
 }

@@ -34,7 +34,7 @@ namespace Takeover
         void OnMouseDown()
         {
             if (!GFGlobal.UI.HasPanel<CastleOperateControl>())
-                GFGlobal.UI.OpenPanel<CastleOperateControl>("CastleOperate", 0, this);
+                GFGlobal.UI.OpenPanel<CastleOperateControl>();
         }
 
         private void OnCampChange(ECamp camp)

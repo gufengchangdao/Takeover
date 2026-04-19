@@ -4,6 +4,5 @@ namespace Takeover
 {
     public class MainMenuControl : BaseControl
     {
-    
     }
 }

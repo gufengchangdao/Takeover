@@ -25,6 +25,7 @@ namespace GameFramework.Hot
         private KeyedReferencePool<Type, BaseControl> panelPool;
         private Dictionary<string, BaseControl> panels = new();
         private Dictionary<string, WaitOpenPanelInfo> waitOpenPanels = new();
+        private HashSet<string> closingPanels = new();
         public Camera UICamera { get; private set; }
 
         void Awake()
@@ -119,6 +120,27 @@ namespace GameFramework.Hot
             return $"{controlType.FullName}_{guid}";
         }
 
+#if USE_LUBAN
+        public void OpenPanel<C>(int guid = 0, object userData = null) where C : BaseControl
+        {
+            string panelName = BaseControl.GetDefaultPanelName(typeof(C));
+            var data = GFGlobal.Tables.TbPanelData.GetOrDefault(panelName);
+            if (data == null)
+            {
+                Log.Error("[UI] Panel not found: {0}", panelName);
+                return;
+            }
+
+            // 界面预制件默认路径
+            string path = data.AssetPath;
+            if (string.IsNullOrEmpty(path))
+                path = string.Format(GFGlobal.Tables.TbGlobalSettingData.DefaultPanelPath, panelName);
+
+            OpenPanel(typeof(C), data.Group, path, guid, userData);
+        }
+#endif
+
+
         public void OpenPanel<C>(string groupName, string assetPath, int guid = 0, object userData = null) where C : BaseControl
         {
             OpenPanel(typeof(C), groupName, assetPath, guid, userData);
@@ -133,14 +155,12 @@ namespace GameFramework.Hot
                 return;
             }
 
-            string name = GetNameWithGuid(controlType, guid);
-            if (panels.TryGetValue(name, out BaseControl control))
+            string nameWithGuid = GetNameWithGuid(controlType, guid);
+            if (panels.TryGetValue(nameWithGuid, out BaseControl control))
             {
-                if (!control.IsClosing)
-                    return;
-
                 // 存一下，等面板关了再重新打开
-                waitOpenPanels[name] = new WaitOpenPanelInfo(controlType, groupName, assetPath, guid, userData);
+                if (closingPanels.Contains(nameWithGuid))
+                    waitOpenPanels[nameWithGuid] = new WaitOpenPanelInfo(controlType, groupName, assetPath, guid, userData);
                 return;
             }
 
@@ -150,11 +170,11 @@ namespace GameFramework.Hot
                 control = Activator.CreateInstance(controlType) as BaseControl;
             control.InitControl(groupName, guid, assetPath);
             control.OnInit(userData);
-            panels.Add(name, control);
+            panels.Add(nameWithGuid, control);
             if (needLoad)
-                GFGlobal.Resource.LoadAssetAsync<GameObject>(assetPath, OnPanelLoaded, (name, userData));
+                GFGlobal.Resource.LoadAssetAsync<GameObject>(assetPath, OnPanelLoaded, (nameWithGuid, userData));
             else
-                InitView(name, control.View.gameObject, userData);
+                InitView(nameWithGuid, control.View.gameObject, userData);
         }
 
         private void OnPanelLoaded(GameObject prefab, object userData)
@@ -163,9 +183,9 @@ namespace GameFramework.Hot
                 InitView(data.Item1, Instantiate(prefab), data.Item2);
         }
 
-        private void InitView(string name, GameObject viewGo, object userData)
+        private void InitView(string nameWithGuid, GameObject viewGo, object userData)
         {
-            BaseControl control = panels[name];
+            BaseControl control = panels[nameWithGuid];
             var group = uiGroups[control.UIGroup];
             viewGo.transform.SetParent(group, false);
             viewGo.SetActive(true);
@@ -187,6 +207,7 @@ namespace GameFramework.Hot
             view.OnInit(userData);
 
             UpdateCursorVisible();
+            UpdatePanelPriority(nameWithGuid);
 
             GFGlobal.Event.Fire(this, OnPanelOpenEvent.Create(control.GetType()));
         }
@@ -198,12 +219,12 @@ namespace GameFramework.Hot
 
         public void ClosePanel(Type controlType, int guid = 0, bool immediate = false)
         {
-            string name = GetNameWithGuid(controlType, guid);
-            waitOpenPanels.Remove(name);
-            if (!panels.TryGetValue(name, out BaseControl control))
+            string nameWithGuid = GetNameWithGuid(controlType, guid);
+            waitOpenPanels.Remove(nameWithGuid);
+            if (!panels.TryGetValue(nameWithGuid, out BaseControl control))
                 return;
-            if (control.IsClosing)
-                return;
+            if (closingPanels.Contains(nameWithGuid))
+                return; //正在关闭
 
             AbstractBaseView view = control.View;
             string assetPath = control.AssetPath;
@@ -212,30 +233,31 @@ namespace GameFramework.Hot
             {
                 float minEndTime = 0;
                 if (!immediate)
-                    minEndTime = control.PlayCloseAnimation();
+                    minEndTime = view.PlayCloseAnimation();
                 if (!Mathf.Approximately(minEndTime, 0))
-                    GFGlobal.Timer.DelayRun(minEndTime, () => OnViewOutAnimEnd(name));
+                    GFGlobal.Timer.DelayRun(minEndTime, () => OnViewOutAnimEnd(nameWithGuid));
                 else
-                    OnViewOutAnimEnd(name);
+                    OnViewOutAnimEnd(nameWithGuid);
             }
             else
             {
                 // view没有创建，不缓存了
-                panels.Remove(name);
+                panels.Remove(nameWithGuid);
                 control.OnUIDestroy();
             }
         }
 
-        private void OnViewOutAnimEnd(string name)
+        private void OnViewOutAnimEnd(string nameWithGuid)
         {
-            BaseControl control = panels[name];
-            panels.Remove(name); //动画播放完毕才表示这个面板不存在了
+            BaseControl control = panels[nameWithGuid];
+            panels.Remove(nameWithGuid); //动画播放完毕才表示这个面板不存在了
+            closingPanels.Remove(nameWithGuid);
             panelPool.Recycle(control.GetType(), control);
 
-            if (waitOpenPanels.TryGetValue(name, out WaitOpenPanelInfo info))
+            if (waitOpenPanels.TryGetValue(nameWithGuid, out WaitOpenPanelInfo info))
             {
                 OpenPanel(info.controlType, info.groupName, info.assetPath, info.guid, info.userData);
-                waitOpenPanels.Remove(name);
+                waitOpenPanels.Remove(nameWithGuid);
             }
 
             UpdateCursorVisible();
@@ -286,6 +308,35 @@ namespace GameFramework.Hot
                 Cursor.visible = true;
                 Cursor.lockState = CursorLockMode.None;
             }
+        }
+
+        // 按照priority字段给面板排序
+        private void UpdatePanelPriority(string nameWithGuid)
+        {
+#if USE_LUBAN
+            var control = panels[nameWithGuid];
+            var view = control.View;
+            int priority = GFGlobal.Tables.TbPanelData[control.PanelName].Priority;
+
+            int targetIndex = -1;
+            foreach (var pair in panels)
+            {
+                var control2 = pair.Value;
+                if (pair.Key != nameWithGuid && control2.UIGroup == control.UIGroup && control2.View)
+                {
+                    int p = GFGlobal.Tables.TbPanelData[control2.PanelName].Priority;
+                    if (p > priority)
+                    {
+                        if (targetIndex == -1)
+                            targetIndex = control2.View.transform.GetSiblingIndex();
+                        else
+                            targetIndex = Mathf.Min(control2.View.transform.GetSiblingIndex(), targetIndex);
+                    }
+                }
+            }
+            if (targetIndex != -1)
+                view.transform.SetSiblingIndex(targetIndex);
+#endif
         }
     }
 }

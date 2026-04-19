@@ -19,7 +19,9 @@ public sealed partial class PanelData : Luban.BeanBase
     {
         { if(!_buf["id"].IsString) { throw new SerializationException(); }  Id = _buf["id"]; }
         { if(!_buf["group"].IsString) { throw new SerializationException(); }  Group = _buf["group"]; }
+        { if(!_buf["priority"].IsNumber) { throw new SerializationException(); }  Priority = _buf["priority"]; }
         { if(!_buf["asset_path"].IsString) { throw new SerializationException(); }  AssetPath = _buf["asset_path"]; }
+        { if(!_buf["loading_close"].IsBoolean) { throw new SerializationException(); }  LoadingClose = _buf["loading_close"]; }
     }
 
     public static PanelData DeserializePanelData(JSONNode _buf)
@@ -33,9 +35,17 @@ public sealed partial class PanelData : Luban.BeanBase
     public readonly string Id;
     public readonly string Group;
     /// <summary>
+    /// 优先级，值越大越在下面，默认0
+    /// </summary>
+    public readonly int Priority;
+    /// <summary>
     /// 资产路径，默认(Assets/Content/UI/Panel/{id}/Prefab/{id}Panel.prefab)
     /// </summary>
     public readonly string AssetPath;
+    /// <summary>
+    /// 加载时是否关闭
+    /// </summary>
+    public readonly bool LoadingClose;
    
     public const int __ID__ = 521005998;
     public override int GetTypeId() => __ID__;
@@ -49,7 +59,9 @@ public sealed partial class PanelData : Luban.BeanBase
         return "{ "
         + "id:" + Id + ","
         + "group:" + Group + ","
+        + "priority:" + Priority + ","
         + "assetPath:" + AssetPath + ","
+        + "loadingClose:" + LoadingClose + ","
         + "}";
     }
 }

@@ -15,6 +15,7 @@ namespace GameFramework.Hot
 
         public virtual void OnInit(object userData)
         {
+            PlayInAnimation();
             foreach (var node in GetComponentsInChildren<BaseUINode>(true))
                 node.OnInit();
         }
@@ -46,10 +47,24 @@ namespace GameFramework.Hot
             cloneSourceIds.Clear();
         }
 
-        public float PlayAnimation(string anim, bool includeChild)
+        #region 动画
+        public const string PanelInAnim = "PanelIn";
+        public const string PanelOutAnim = "PanelOut";
+
+        public float PlayInAnimation()
         {
+            if (TryGetComponent<Animator>(out var animator))
+                return animator.GFPlayUIAnimation(PanelInAnim, true);
             return 0;
         }
+
+        public float PlayCloseAnimation()
+        {
+            if (TryGetComponent<Animator>(out var animator))
+                return animator.GFPlayUIAnimation(PanelOutAnim, true);
+            return 0;
+        }
+        #endregion
 
         /// <summary>
         /// 拷贝一个节点

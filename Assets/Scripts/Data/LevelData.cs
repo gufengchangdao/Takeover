@@ -18,6 +18,9 @@ namespace Takeover
         /// </summary>
         public int LevelCount { get; private set; }
 
+        /// <summary>
+        /// 当前通关的关卡
+        /// </summary>
         public int CurrentLevel { get; private set; }
 
         /// <summary>
@@ -29,7 +32,7 @@ namespace Takeover
         {
         }
 
-        public void OnSave()
+        public void OnSave(bool isQuit)
         {
         }
 

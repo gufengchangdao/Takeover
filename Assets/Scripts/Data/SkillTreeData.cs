@@ -15,6 +15,6 @@ namespace Takeover
             return skillTreeData.ContainsKey($"army_{armyId}_unlock");
         }
 
-        public void OnSave() { }
+        public void OnSave(bool isQuit) { }
     }
 }

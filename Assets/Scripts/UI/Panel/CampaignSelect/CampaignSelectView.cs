@@ -11,6 +11,8 @@ namespace Takeover
     {
         [SerializeField] private List<CampaignSelectUI> campaigns;
 
+        [SerializeField] private GFButton returnBtn;
+
         public override void OnInit(object userData)
         {
             base.OnInit(userData);
@@ -24,6 +26,11 @@ namespace Takeover
                     GFGlobal.Procedure.StartProcudre<LevelSelectProcedure>();
                 });
             }
+            returnBtn.onClick.AddEventListener(e =>
+            {
+                Close();
+                GFGlobal.UI.OpenPanel<MainMenuControl>();
+            });
         }
 
         private void InitCampaignUI(ECamp camp, TextMeshProUGUI txtProgress)
@@ -36,6 +43,7 @@ namespace Takeover
         {
             foreach (var campaign in campaigns)
                 campaign.btn.onClick.Clear();
+            returnBtn.onClick.Clear();
             base.OnRecycle();
         }
 

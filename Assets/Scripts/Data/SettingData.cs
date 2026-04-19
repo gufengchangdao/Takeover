@@ -1,3 +1,4 @@
+using GameFramework.AOT;
 using GameFramework.Hot;
 using SimpleJSON;
 
@@ -7,17 +8,7 @@ namespace Takeover
     {
         public void OnLoad()
         {
-            // 初始化
-            float musicVolume = 0.5f; //默认值
-
-            var jsonData = GFGlobal.Save.GetString(nameof(SettingData));
-            if (!string.IsNullOrEmpty(jsonData))
-            {
-                JSONNode jsonNode = JSON.Parse(jsonData);
-                musicVolume = jsonNode[SaveKeyEnum.MusicVolume].AsFloat;
-            }
-
-            GFGlobal.Sound.MusicVolume = musicVolume;
+            GFGlobal.Sound.MusicVolume = GFGlobal.Save.GetFloat(SaveKeyEnum.MusicVolume, 0.5f);
 
             // 监听
             GFGlobal.Event.Subscribe<MusicVolumeChangeEvent>(OnMusicVolumeChange);
@@ -28,10 +19,8 @@ namespace Takeover
             GFGlobal.Save.SetFloat(SaveKeyEnum.MusicVolume, e.musicVolume);
         }
 
-        public void OnSave()
+        public void OnSave(bool isQuit)
         {
-
-
         }
     }
 }

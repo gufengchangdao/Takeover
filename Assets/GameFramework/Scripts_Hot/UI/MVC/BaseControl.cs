@@ -1,10 +1,20 @@
+using System;
 using GameFramework.AOT;
 using UnityEngine;
 
 namespace GameFramework.Hot
 {
-    public class BaseControl : IUILifecycle
+    public abstract class BaseControl : IUILifecycle
     {
+        // 面板名字，默认去掉Control就是面板名
+        public virtual string PanelName
+        {
+            get
+            {
+                return GetDefaultPanelName(GetType());
+            }
+        }
+
         public string UIGroup { get; private set; }
         public int Guid { get; private set; }
         public string AssetPath { get; private set; }
@@ -31,6 +41,15 @@ namespace GameFramework.Hot
         /// 层级的优先级，有些界面加载的慢但又要求在其他界面前面，通过指定优先级解决，值越小越在上面
         /// </summary>
         public int LayerPriority { get; set; }
+
+        public static string GetDefaultPanelName(Type controlType)
+        {
+            string suffix = "Control";
+            string className = controlType.Name;
+            if (className.EndsWith(suffix))
+                return className.Substring(0, className.Length - suffix.Length);
+            return className;
+        }
 
         public void InitControl(string uiGroup, int guid, string assetPath)
         {
@@ -61,7 +80,6 @@ namespace GameFramework.Hot
             }
             UIGroup = null;
             Guid = 0;
-            IsClosing = false;
         }
 
         public virtual void OnUIDestroy()
@@ -72,15 +90,6 @@ namespace GameFramework.Hot
                 GameObject.Destroy(View.gameObject);
             }
             View = null;
-        }
-
-        public bool IsClosing { get; private set; }
-
-        public float PlayCloseAnimation()
-        {
-            IsClosing = true;
-            float minEndTime = View.PlayAnimation("PanelOut", true);
-            return minEndTime;
         }
 
         public void Close(bool immediate = false)
