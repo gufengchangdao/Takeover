@@ -231,6 +231,7 @@ namespace GameFramework.Hot
 
         public void ClosePanel(Type controlType, int guid = 0, bool immediate = false)
         {
+            Log.Info("Close UI Panel {0}", controlType.Name);
             string nameWithGuid = GetNameWithGuid(controlType, guid);
             waitOpenPanels.Remove(nameWithGuid);
             if (!panels.TryGetValue(nameWithGuid, out BaseControl control))

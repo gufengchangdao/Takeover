@@ -19,126 +19,68 @@ namespace GameFramework.Hot
             }
         }
 
-        private readonly Dictionary<string, (TMP_FontAsset, Material)> materials = new();
-        private readonly Dictionary<string, TMP_FontAsset> fonts = new();
-        private string languageCode;
+        private Dictionary<string, (TMP_FontAsset, Material)> materials = new();
 
         public void Init()
         {
             materials.Clear();
-            fonts.Clear();
 
-            languageCode = AOTGameConfig.Language.GFGetCode();
+            string languageCode = AOTGameConfig.Language.GFGetCode();
             string location = $"Assets/Content/Font/{languageCode}/TMP_Font/uifont.asset";
             var assets = GFGlobal.Resource.LoadAllAssetsSyncNoCache(location);
 
-            List<TMP_FontAsset> fontAssets = new();
+            List<TMP_FontAsset> fonts = new();
             foreach (var asset in assets)
-            {
-                if (asset is not TMP_FontAsset font)
-                    continue;
-
-                fontAssets.Add(font);
-                fonts[font.name] = font;
-                RegisterMaterial(font, font.material);
-            }
+                if (asset is TMP_FontAsset font)
+                    fonts.Add(font);
 
             foreach (var asset in assets)
             {
-                if (asset is not Material material)
-                    continue;
-
-                var font = FindFontForMaterial(material, fontAssets);
-                if (font == null)
+                TMP_FontAsset font = null;
+                Material material = null;
+                if (asset is TMP_FontAsset)
                 {
-                    Log.Warning($"字体材质{asset.name}找不到对应的字体，已跳过");
-                    continue;
+                    font = asset as TMP_FontAsset;
+                    material = font.material;
+                }
+                else if (asset is Material m)
+                {
+                    if (!m.shader.name.Contains("TextMeshPro"))
+                        continue; //ttf文件自带的材质忽略掉
+
+                    foreach (var f in fonts) //查找材质所属字体
+                    {
+                        if (f.atlasTexture == m.GetTexture(ShaderUtilities.ID_MainTex))
+                        {
+                            font = f;
+                            break;
+                        }
+                    }
+                    if (font == null)
+                        Log.Error($"字体材质{asset.name}找不到对应的字体");
+                    material = m;
                 }
 
-                RegisterMaterial(font, material);
+                if (font != null)
+                {
+                    materials[material.name] = (font, material);
+                }
             }
 
-            Log.Info($"[Font] 字体加载完成，共加载{fontAssets.Count}个字体资源");
+            Log.Info($"[Font] 字体加载完成，共加载{fonts.Count}个字体材质");
         }
 
         public void Destroy()
         {
             materials.Clear();
-            fonts.Clear();
         }
 
         public void GetFontMaterial(string materialName, out TMP_FontAsset font, out Material material)
         {
             if (!materials.TryGetValue(materialName, out var pair))
-            {
-                if (!TryLoadMaterialVariant(materialName, out pair))
-                    pair = materials[DefaultFontMaterial];
-            }
-
+                pair = materials[DefaultFontMaterial];
             font = pair.Item1;
             material = pair.Item2;
-        }
-
-        private void RegisterMaterial(TMP_FontAsset font, Material material)
-        {
-            if (font == null || material == null)
-                return;
-
-            materials[material.name] = (font, material);
-        }
-
-        private TMP_FontAsset FindFontForMaterial(Material material, List<TMP_FontAsset> fontAssets)
-        {
-            var mainTex = material.GetTexture(ShaderUtilities.ID_MainTex);
-            if (mainTex != null)
-            {
-                foreach (var font in fontAssets)
-                {
-                    if (font.atlasTexture == mainTex)
-                        return font;
-                }
-
-                foreach (var font in fontAssets)
-                {
-                    if (font.atlasTexture != null && font.atlasTexture.name == mainTex.name)
-                        return font;
-                }
-            }
-
-            TMP_FontAsset prefixMatch = null;
-            foreach (var font in fontAssets)
-            {
-                if (!material.name.StartsWith(font.name))
-                    continue;
-
-                if (prefixMatch == null || font.name.Length > prefixMatch.name.Length)
-                    prefixMatch = font;
-            }
-
-            return prefixMatch;
-        }
-
-        private bool TryLoadMaterialVariant(string materialName, out (TMP_FontAsset, Material) pair)
-        {
-            pair = default;
-            if (string.IsNullOrEmpty(materialName))
-                return false;
-
-            string location = $"Assets/Content/Font/{languageCode}/TMP_Font/Material/{materialName}.mat";
-            var material = GFGlobal.Resource.LoadAssetSync<Material>(location, false);
-            if (material == null)
-                return false;
-
-            var font = FindFontForMaterial(material, new List<TMP_FontAsset>(fonts.Values));
-            if (font == null)
-            {
-                Log.Warning($"字体材质{materialName}加载成功，但找不到对应的字体");
-                return false;
-            }
-
-            pair = (font, material);
-            materials[material.name] = pair;
-            return true;
         }
     }
 }

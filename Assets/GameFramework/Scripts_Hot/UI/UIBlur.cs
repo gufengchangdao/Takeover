@@ -21,7 +21,8 @@ namespace GameFramework.Hot
 
         void Start()
         {
-            blurMaterial = new Material(Shader.Find("Hidden/GaussianBlur"));
+            Shader shader = GFGlobal.Resource.LoadAssetSync<Shader>("Assets/Content/UI/Shader/GaussianBlur.shader");
+            blurMaterial = new Material(shader);
             blurMaterial.SetFloat("_BlurRange", blurRange);
             Blur();
         }
