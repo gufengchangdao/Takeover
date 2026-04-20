@@ -42,7 +42,6 @@ public static class Global
         // LevelData.OnLoad();
 
         Application.quitting += OnQuit;
-        GFGlobal.Event.Subscribe<SceneLoadBeginEvent>(OnSceneBeginLoad);
 
         // 初始化流程
         GFGlobal.Procedure.Init(
@@ -66,10 +65,5 @@ public static class Global
     private static void OnQuit()
     {
         Log.Info("游戏退出");
-    }
-
-    private static void OnSceneBeginLoad(object sender, SceneLoadBeginEvent data)
-    {
-        GFGlobal.UI.OnStartLoading();
     }
 }

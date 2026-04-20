@@ -9,11 +9,13 @@ namespace GameFramework.Hot
         void Awake()
         {
             SceneManager.sceneLoaded += OnSceneLoaded;
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
         }
 
         void OnDestroy()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneUnloaded -= OnSceneUnloaded;
         }
 
         public void LoadScene(string sceneName, LoadSceneMode mode = LoadSceneMode.Single)
@@ -37,14 +39,18 @@ namespace GameFramework.Hot
 
         public void UnloadSceneAsync(string sceneName)
         {
+            GFGlobal.Event.Fire(this, SceneUnloadBeginEvent.Create(sceneName));
             SceneManager.UnloadSceneAsync(sceneName);
         }
-
-
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             GFGlobal.Event.Fire(this, SceneLoadEndEvent.Create(scene, mode));
+        }
+
+        private void OnSceneUnloaded(Scene scene)
+        {
+            GFGlobal.Event.Fire(this, SceneUnloadEndEvent.Create(scene));
         }
     }
 }

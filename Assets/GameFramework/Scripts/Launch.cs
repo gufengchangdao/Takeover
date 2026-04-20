@@ -1,11 +1,7 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using GameFramework.AOT;
 #if USE_HYBRIDCLR
 using HybridCLR;
 #endif
@@ -21,10 +17,13 @@ namespace GameFramework.AOT
 
         public const string DefaultPackage = "DefaultPackage";
 
-        private EPlayMode playMode = EPlayMode.EditorSimulateMode;
+        [SerializeField]
+        private EPlayMode playMode = EPlayMode.OfflinePlayMode;
+        [SerializeField]
+        private bool enableEditorSimulateMode = true;
 
         public string defaultPackageVersion;
-        private const string DataTableDllName = "DataTable";
+        [SerializeField] private string DataTableDllName = "DataTable"; //数据表类程序集，为空就表示不需要加载
         private const string FrameworkDllName = "GameFramework.Hot";
 #if USE_HYBRIDCLR
         private const string ProjectDllName = "HotUpdate";
@@ -44,6 +43,9 @@ namespace GameFramework.AOT
 
         IEnumerator Start()
         {
+            if (enableEditorSimulateMode && Application.isEditor)
+                playMode = EPlayMode.EditorSimulateMode;
+
             // 配置数据
             AOTGameConfig.PlayMode = playMode;
 
@@ -61,9 +63,17 @@ namespace GameFramework.AOT
 
             YooAssets.SetDefaultPackage(YooAssets.TryGetPackage(DefaultPackage));
 
+#if USE_HYBRIDCLR
             if (playMode != EPlayMode.EditorSimulateMode)
                 LoadMetadataForAOTAssembies();
             yield return InitHotUpdateDll();
+#else
+            Log.Info("开始加载GameFramework.Hot框架");
+            Type globalType = Type.GetType("GameFramework.Hot.GFGlobal, GameFramework.Hot");
+            gameObject.AddComponent(globalType);
+            Log.Info("开始执行Global.Main方法");
+            Type.GetType("Global").GetMethod("Main").Invoke(null, null);
+#endif
         }
 
         protected static void UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -89,8 +99,11 @@ namespace GameFramework.AOT
             AssemblyInfo assemblyInfo = new();
 
 #if USE_LUBAN
-            assemblyInfo.Reset(DataTableDllName);
-            yield return LoadAssemblie(assemblyInfo);
+            if (!string.IsNullOrEmpty(DataTableDllName))
+            {
+                assemblyInfo.Reset(DataTableDllName);
+                yield return LoadAssemblie(assemblyInfo);
+            }
 #endif
             // 加载框架程序集
             assemblyInfo.Reset(FrameworkDllName);

@@ -147,9 +147,10 @@ namespace Takeover
         }
 
 
-#if UNITY_EDITOR
+
         private void LoadPrefabInEditor(string assetPath)
         {
+#if UNITY_EDITOR
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
             loadingAssetPath = null;
             if (!prefab)
@@ -161,10 +162,12 @@ namespace Takeover
             if (childNode)
                 DestroyImmediate(childNode);
             childNode = PrefabUtility.InstantiatePrefab(prefab, transform) as GameObject;
+#endif
         }
 
         private void LoadSpriteInEditor(string assetPath)
         {
+#if UNITY_EDITOR
             var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
             loadingAssetPath = null;
             if (!sprite)
@@ -174,8 +177,9 @@ namespace Takeover
             }
 
             SetImage(sprite);
+#endif
         }
-
+#if UNITY_EDITOR
         private void SelectSameCampGameObject()
         {
             var cur = gameObject.GetComponent<Camp>().CurCamp;

@@ -133,7 +133,7 @@ namespace GameFramework.Hot
         public void OpenPanel<C>(int guid = 0, object userData = null) where C : BaseControl
         {
             string panelName = BaseControl.GetDefaultPanelName(typeof(C));
-            bool hasData = GetPanelData(panelName, out string group, out string assetPath, out int _, out bool _);
+            bool hasData = GetPanelData(panelName, out string group, out string assetPath, out int _);
             if (!hasData)
             {
                 Log.Error("[UI] Panel not found: {0}", panelName);
@@ -154,7 +154,7 @@ namespace GameFramework.Hot
 
         public void OpenPanel(Type controlType, string groupName, string assetPath, int guid = 0, object userData = null)
         {
-            Log.Info("Open UI Panel {0},{1},{2}", controlType.Name, groupName, assetPath);
+            Log.Info("Open UI Panel {0},{1}", controlType.Name, assetPath);
             if (!uiGroups.ContainsKey(groupName))
             {
                 Log.Error("[UI] UI Group not found: {0}", groupName);
@@ -327,7 +327,7 @@ namespace GameFramework.Hot
         {
             var control = panels[nameWithGuid];
             var view = control.View;
-            GetPanelData(control.PanelName, out var _, out var _, out int priority, out var _);
+            GetPanelData(control.PanelName, out var _, out var _, out int priority);
 
             int targetIndex = -1;
             foreach (var pair in panels)
@@ -335,7 +335,7 @@ namespace GameFramework.Hot
                 var control2 = pair.Value;
                 if (pair.Key != nameWithGuid && control2.UIGroup == control.UIGroup && control2.View)
                 {
-                    GetPanelData(control2.PanelName, out var _, out var _, out int p, out var _);
+                    GetPanelData(control2.PanelName, out var _, out var _, out int p);
                     if (p > priority)
                     {
                         if (targetIndex == -1)
@@ -349,32 +349,11 @@ namespace GameFramework.Hot
                 view.transform.SetSiblingIndex(targetIndex);
         }
 
-        private List<BaseControl> tempControls = new();
-
-        // 开始加载时把配置了LoadingClose的面板都关闭
-        public void OnStartLoading()
-        {
-            tempControls.AddRange(panels.Values);
-            for (int i = 0; i < tempControls.Count; i++)
-            {
-                var control = tempControls[i];
-                if (!(control.UIGroup == UIGroup.SCENE || control.UIGroup == UIGroup.FILTER || control.UIGroup == UIGroup.MAIN))
-                    continue;
-
-                GetPanelData(control.PanelName, out var _, out var _, out var _, out bool loadingClose);
-                if (loadingClose)
-                    control.Close(true);
-            }
-            tempControls.Clear();
-        }
-
-
-        private bool GetPanelData(string panelName, out string group, out string assetPath, out int priority, out bool loadingClose)
+        private bool GetPanelData(string panelName, out string group, out string assetPath, out int priority)
         {
             group = UIGroup.MAIN;
             assetPath = "";
             priority = 0;
-            loadingClose = true;
 #if USE_LUBAN
             var panelData = GFGlobal.Tables.TbPanelData.GetOrDefault(panelName);
             if (panelData == null)
@@ -383,7 +362,6 @@ namespace GameFramework.Hot
             group = panelData.Group;
             assetPath = panelData.AssetPath;
             priority = panelData.Priority;
-            loadingClose = panelData.LoadingClose;
             return true;
 #else
             // 不使用luban需要自定义这一部分

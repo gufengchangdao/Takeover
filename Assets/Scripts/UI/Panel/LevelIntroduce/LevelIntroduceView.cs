@@ -21,6 +21,7 @@ namespace Takeover
             btnStart.onClick.AddEventListener(e =>
             {
                 GFGlobal.Procedure.ChangeState<ProcedureLevel>(levelData.Id);
+                Close();
             });
         }
 
