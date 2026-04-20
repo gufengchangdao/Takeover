@@ -18,17 +18,11 @@ namespace Takeover
             txtTitle.text = levelData.Title;
             txtContent.text = levelData.Content;
 
-            btnStart.onClick.AddEventListener(e =>
+            BtnOnClick(btnStart, e =>
             {
                 GFGlobal.Procedure.ChangeState<ProcedureLevel>(levelData.Id);
                 Close();
             });
-        }
-
-        public override void OnRecycle()
-        {
-            btnStart.onClick.Clear();
-            base.OnRecycle();
         }
     }
 }

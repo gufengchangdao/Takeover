@@ -15,11 +15,11 @@ namespace Takeover
         {
             base.OnInit(userData);
 
-            btnReturn.onClick.AddEventListener(e =>
+            BtnOnClick(btnReturn, e =>
             {
                 GFGlobal.Procedure.ChangeState<ProcedureStart>();
             });
-            btnSkill.onClick.AddEventListener(e =>
+            BtnOnClick(btnSkill, e =>
             {
                 Log.Error("TODO技能面板");
             });
@@ -28,11 +28,5 @@ namespace Takeover
             txtCampaignName.text = GFGlobal.Tables.TbCampaignData[camp].ShowName;
         }
 
-        public override void OnRecycle()
-        {
-            btnReturn.onClick.Clear();
-            btnSkill.onClick.Clear();
-            base.OnRecycle();
-        }
     }
 }

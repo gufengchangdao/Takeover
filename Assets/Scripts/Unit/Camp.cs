@@ -4,6 +4,14 @@ using GameFramework.Hot;
 using TableStructure;
 using UnityEngine;
 using UnityEngine.UI;
+using Sirenix.OdinInspector;
+using UnityEngine.U2D;
+using YooAsset;
+using GameFramework.AOT;
+
+
+
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -33,9 +41,12 @@ namespace Takeover
         private string assetPathBase;
 
         [SerializeField]
+        private string atlasPath;
+
+        [SerializeField]
         private bool hasBroken;
         [SerializeField]
-        private bool setNativeSize = true;
+        private bool setNativeSize;
 
         public event Action<ECamp> OnCampChange;
 
@@ -58,7 +69,6 @@ namespace Takeover
         }
 
         private string loadingAssetPath;
-        private GameObject childNode;
 
         private void UpdateCampSprite()
         {
@@ -66,19 +76,20 @@ namespace Takeover
             bool isImage = TryGetComponent<Image>(out var image);
             bool isPrefab = !isSprite && !isImage;
 
+            // 命名方式规定为驼峰式
             string assetPath = assetPathBase;
             if (hasBroken && IsBroken)
-                assetPath += "_broken";
-            assetPath += $"_{CurCamp.ToString().ToLower()}";
+                assetPath += "Broken";
+            assetPath += $"{CurCamp}";
             if (isPrefab)
                 assetPath += ".prefab";
-            else
+            else if (string.IsNullOrEmpty(atlasPath))
                 assetPath += ".png";
             if (loadingAssetPath == assetPath)
                 return; //已经在请求了
 
             loadingAssetPath = assetPath;
-            if (!Application.isPlaying)
+            if (!Application.isPlaying || GFGlobal.Resource == null)
             {
                 if (isPrefab)
                     LoadPrefabInEditor(assetPath);
@@ -90,7 +101,12 @@ namespace Takeover
                 if (isPrefab)
                     GFGlobal.Resource.LoadAssetAsync<GameObject>(assetPath, OnPrefabLoaded, assetPath);
                 else
-                    GFGlobal.Resource.LoadAssetAsync<Sprite>(assetPath, OnSpriteLoaded, assetPath);
+                {
+                    if (string.IsNullOrEmpty(atlasPath))
+                        GFGlobal.Resource.LoadAssetAsync<Sprite>(assetPath, OnSpriteLoaded, assetPath);
+                    else
+                        GFGlobal.Resource.LoadAssetAsync<SpriteAtlas>(atlasPath, OnAtlasLoaded, assetPath);
+                }
             }
         }
 
@@ -109,9 +125,10 @@ namespace Takeover
         {
             if (LoadCheck(userdata))
             {
-                if (childNode)
-                    Destroy(childNode);
-                childNode = Instantiate(obj, transform);
+                var root = transform.Find("Prefab");
+                if (root)
+                    Destroy(root.gameObject);
+                Instantiate(obj, transform).name = "Prefab";
             }
         }
 
@@ -135,18 +152,19 @@ namespace Takeover
                 SetImage(sprite);
         }
 
-        void Start()
+        private void OnAtlasLoaded(SpriteAtlas atlas, object userdata)
         {
-            if (Global.LevelData != null) //根据当前阵营初始化一下
-                CurCamp = Global.LevelData.Camp;
+            if (!LoadCheck(userdata))
+                return;
+
+            Sprite sprite = atlas.GetSprite(userdata as string);
+            SetImage(sprite);
         }
 
         void OnDestroy()
         {
             OnCampChange = null;
         }
-
-
 
         private void LoadPrefabInEditor(string assetPath)
         {
@@ -159,9 +177,11 @@ namespace Takeover
                 return;
             }
 
-            if (childNode)
-                DestroyImmediate(childNode);
-            childNode = PrefabUtility.InstantiatePrefab(prefab, transform) as GameObject;
+            var root = transform.Find("Prefab");
+            if (root)
+                DestroyImmediate(root.gameObject);
+            GameObject go = PrefabUtility.InstantiatePrefab(prefab, transform) as GameObject;
+            go.name = "Prefab";
 #endif
         }
 

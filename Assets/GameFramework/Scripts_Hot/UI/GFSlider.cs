@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace GameFramework.Hot
 {
-    public class SliderPro : Slider, IEndDragHandler
+    public class GFSlider : Slider, IEndDragHandler
     {
         /// <summary>
         /// 值改变回调，松开时才会触发

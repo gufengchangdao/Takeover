@@ -10,22 +10,15 @@ namespace Takeover
         public override void OnInit(object userData)
         {
             base.OnInit(userData);
-            btnStart.onClick.AddEventListener((e) =>
+            BtnOnClick(btnStart, e =>
             {
                 GFGlobal.UI.OpenPanel<CampaignSelectControl>();
                 Close();
             });
-            btnExit.onClick.AddEventListener((e) =>
+            BtnOnClick(btnExit, e =>
             {
                 Global.Quit();
             });
-        }
-
-        public override void OnRecycle()
-        {
-            btnStart.onClick.Clear();
-            btnExit.onClick.Clear();
-            base.OnRecycle();
         }
     }
 }

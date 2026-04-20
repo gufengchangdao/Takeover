@@ -19,14 +19,14 @@ namespace Takeover
             foreach (var campaign in campaigns)
             {
                 InitCampaignUI(campaign.camp, campaign.txtProgress);
-                campaign.btn.onClick.AddEventListener(e =>
+                BtnOnClick(campaign.btn, e =>
                 {
                     Global.LevelData.SetLevelData(Control.LevelDatas[campaign.camp]);
                     Close();
                     GFGlobal.Procedure.ChangeState<ProcedureLevelSelect>();
                 });
             }
-            returnBtn.onClick.AddEventListener(e =>
+            BtnOnClick(returnBtn, e =>
             {
                 Close();
                 GFGlobal.UI.OpenPanel<MainMenuControl>();
@@ -37,14 +37,6 @@ namespace Takeover
         {
             var levelData = Control.LevelDatas[camp];
             txtProgress.text = $"{levelData.CurrentLevel}/{levelData.LevelCount}";
-        }
-
-        public override void OnRecycle()
-        {
-            foreach (var campaign in campaigns)
-                campaign.btn.onClick.Clear();
-            returnBtn.onClick.Clear();
-            base.OnRecycle();
         }
 
         [Serializable]

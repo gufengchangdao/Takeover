@@ -1,3 +1,4 @@
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
@@ -23,13 +24,19 @@ namespace GameFramework.Hot
         public void RemoveEventListener(UnityAction<BaseEventData> call)
         {
             RemoveListener(call);
-            Count--;
+            Count = Mathf.Max(0, Count - 1);
         }
 
         public void Clear()
         {
             RemoveAllListeners();
             Count = 0;
+        }
+
+        public void SetEventListener(UnityAction<BaseEventData> call)
+        {
+            Clear();
+            AddEventListener(call);
         }
     }
 }

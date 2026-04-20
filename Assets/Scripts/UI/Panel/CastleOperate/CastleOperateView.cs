@@ -23,7 +23,7 @@ namespace Takeover
 
             // 点击空白区域关闭
             var button = GetComponent<GFButton>();
-            button.onClick.AddEventListener((eventData) => Control.Close());
+            BtnOnClick(button, (eventData) => Control.Close());
 
             btnUnitList = new();
             btnArmy.Visible = false;
@@ -35,7 +35,7 @@ namespace Takeover
                 node.name = armyId;
                 int index = btnUnitList.Count;
                 node.localPosition = GetBtnPosition(index);
-                node.btn.onClick.AddEventListener((eventData) => OnClickUnitBtn(index));
+                BtnOnClick(node.btn, (eventData) => OnClickUnitBtn(index));
                 var spriteAtals = GFGlobal.Resource.LoadAssetSync<SpriteAtlas>(GFGlobal.Tables.TbGlobalSettingData.ArmyIconPath);
                 node.imgIcon.sprite = spriteAtals.GetSprite(armyId);
                 btnUnitList.Add(node);
@@ -46,16 +46,11 @@ namespace Takeover
             groupNode.transform.localPosition = groupNode.transform.WorldToUILocalPosition(worldPos, GFGlobal.UI.UICamera);
 
             // 升级
-            btnUpgrade.btn.onClick.AddEventListener((data) =>
+            BtnOnClick(btnUpgrade.btn, (data) =>
             {
                 Log.Error("升级");
             });
             btnUpgrade.localPosition = GetBtnPosition(Control.showArmies.Count);
-        }
-
-        public override void OnRecycle()
-        {
-            base.OnRecycle();
         }
 
         // 根据索引设置每个按钮的位置，考虑btnCount为[1,6]的情况

@@ -10,7 +10,7 @@ namespace Takeover
         {
             base.OnInit(userData);
 
-            btnSetting.onClick.AddEventListener((e) =>
+            BtnOnClick(btnSetting, (e) =>
             {
                 if (!GFGlobal.UI.HasPanel<SettingControl>())
                     GFGlobal.UI.OpenPanel<SettingControl>();
