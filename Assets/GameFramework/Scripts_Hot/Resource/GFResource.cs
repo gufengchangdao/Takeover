@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using GameFramework.AOT;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using YooAsset;
 
 namespace GameFramework.Hot
@@ -67,6 +68,11 @@ namespace GameFramework.Hot
             if (cache)
                 pool.Recycle(location, handle);
             return handle.GetAssetObject<T>();
+        }
+
+        public void LoadSceneSync(string location, LoadSceneMode sceneMode = LoadSceneMode.Single)
+        {
+            SceneHandle sceneHandle = defaultPackage.LoadSceneSync(location, sceneMode);
         }
     }
 }

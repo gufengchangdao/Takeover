@@ -22,11 +22,6 @@ namespace GameFramework.Hot
             SceneManager.LoadScene(sceneName, mode);
         }
 
-        public void UnloadSceneAsync(string sceneName)
-        {
-            SceneManager.UnloadSceneAsync(sceneName);
-        }
-
         public void LoadSceneAsync(string sceneName, LoadSceneMode mode = LoadSceneMode.Single, Action<AsyncOperation> completed = null)
         {
             GFGlobal.Event.Fire(this, SceneLoadBeginEvent.Create(sceneName, mode));
@@ -34,6 +29,18 @@ namespace GameFramework.Hot
             if (completed != null)
                 op.completed += completed;
         }
+
+        public void LoadSceneByPackage(string assetPath)
+        {
+            GFGlobal.Resource.LoadSceneSync(assetPath);
+        }
+
+        public void UnloadSceneAsync(string sceneName)
+        {
+            SceneManager.UnloadSceneAsync(sceneName);
+        }
+
+
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {

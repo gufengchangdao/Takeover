@@ -20,6 +20,7 @@ public sealed partial class GlobalSettingData : Luban.BeanBase
         { if(!_buf["army_icon_path"].IsString) { throw new SerializationException(); }  ArmyIconPath = _buf["army_icon_path"]; }
         { if(!_buf["default_panel_path"].IsString) { throw new SerializationException(); }  DefaultPanelPath = _buf["default_panel_path"]; }
         { if(!_buf["sound_path"].IsString) { throw new SerializationException(); }  SoundPath = _buf["sound_path"]; }
+        { if(!_buf["level_scene_path"].IsString) { throw new SerializationException(); }  LevelScenePath = _buf["level_scene_path"]; }
     }
 
     public static GlobalSettingData DeserializeGlobalSettingData(JSONNode _buf)
@@ -39,6 +40,10 @@ public sealed partial class GlobalSettingData : Luban.BeanBase
     /// 音频目录
     /// </summary>
     public readonly string SoundPath;
+    /// <summary>
+    /// 关卡场景目录
+    /// </summary>
+    public readonly string LevelScenePath;
    
     public const int __ID__ = -262071721;
     public override int GetTypeId() => __ID__;
@@ -53,6 +58,7 @@ public sealed partial class GlobalSettingData : Luban.BeanBase
         + "armyIconPath:" + ArmyIconPath + ","
         + "defaultPanelPath:" + DefaultPanelPath + ","
         + "soundPath:" + SoundPath + ","
+        + "levelScenePath:" + LevelScenePath + ","
         + "}";
     }
 }

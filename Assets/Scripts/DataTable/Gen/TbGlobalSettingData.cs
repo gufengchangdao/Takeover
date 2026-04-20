@@ -40,6 +40,10 @@ public partial class TbGlobalSettingData
     /// 音频目录
     /// </summary>
      public string SoundPath => _data.SoundPath;
+    /// <summary>
+    /// 关卡场景目录
+    /// </summary>
+     public string LevelScenePath => _data.LevelScenePath;
     
     public void ResolveRef(Tables tables)
     {

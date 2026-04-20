@@ -14,13 +14,13 @@ namespace Takeover
         {
             base.OnInit(userData);
 
-            Global.TableCache.GetLevelInfo(Global.LevelData.Camp, Control.Level, out string title, out string content);
-            txtTitle.text = title;
-            txtContent.text = content;
+            var levelData = Global.TableCache.GetLevelData(Global.LevelData.Camp, Control.Level);
+            txtTitle.text = levelData.Title;
+            txtContent.text = levelData.Content;
 
             btnStart.onClick.AddEventListener(e =>
             {
-                GFGlobal.Procedure.ChangeState<ProcedureLevel>(Control.Level);
+                GFGlobal.Procedure.ChangeState<ProcedureLevel>(levelData.Id);
             });
         }
 

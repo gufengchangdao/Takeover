@@ -8,7 +8,10 @@ namespace Takeover
         protected override void OnEnter(object userData)
         {
             base.OnEnter(userData);
-            Log.Error("关卡" + userData);
+            int levelId = (int)userData;
+            string assetPath = string.Format(GFGlobal.Tables.TbGlobalSettingData.LevelScenePath, levelId);
+            Log.Info("加载关卡：" + assetPath);
+            GFGlobal.Scene.LoadSceneByPackage(assetPath);
         }
     }
 }
