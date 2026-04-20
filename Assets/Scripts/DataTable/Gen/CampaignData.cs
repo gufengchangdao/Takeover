@@ -17,11 +17,9 @@ public sealed partial class CampaignData : Luban.BeanBase
 {
     public CampaignData(JSONNode _buf) 
     {
-        { if(!_buf["id"].IsNumber) { throw new SerializationException(); }  Id = _buf["id"]; }
         { if(!_buf["camp"].IsNumber) { throw new SerializationException(); }  Camp = (ECamp)_buf["camp"].AsInt; }
-        { if(!_buf["level_num"].IsNumber) { throw new SerializationException(); }  LevelNum = _buf["level_num"]; }
-        { if(!_buf["title"].IsString) { throw new SerializationException(); }  Title = _buf["title"]; }
-        Title_Ref = null;
+        { if(!_buf["show_name"].IsString) { throw new SerializationException(); }  ShowName = _buf["show_name"]; }
+        ShowName_Ref = null;
     }
 
     public static CampaignData DeserializeCampaignData(JSONNode _buf)
@@ -30,38 +28,28 @@ public sealed partial class CampaignData : Luban.BeanBase
     }
 
     /// <summary>
-    /// 战役编号
-    /// </summary>
-    public readonly int Id;
-    /// <summary>
     /// 阵营
     /// </summary>
     public readonly ECamp Camp;
     /// <summary>
-    /// 关卡
+    /// 战役名
     /// </summary>
-    public readonly int LevelNum;
-    /// <summary>
-    /// 标题
-    /// </summary>
-    public readonly string Title;
-    public MultiLanguageText Title_Ref;
+    public readonly string ShowName;
+    public MultiLanguageText ShowName_Ref;
    
     public const int __ID__ = 336441594;
     public override int GetTypeId() => __ID__;
 
     public  void ResolveRef(Tables tables)
     {
-        Title_Ref = tables.TbMultiLanguageText.GetOrDefault(Title);
+        ShowName_Ref = tables.TbMultiLanguageText.GetOrDefault(ShowName);
     }
 
     public override string ToString()
     {
         return "{ "
-        + "id:" + Id + ","
         + "camp:" + Camp + ","
-        + "levelNum:" + LevelNum + ","
-        + "title:" + Title + ","
+        + "showName:" + ShowName + ","
         + "}";
     }
 }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using GameFramework.Hot;
 using TableStructure;
 using UnityEngine;
+using UnityEngine.UI;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -31,9 +33,9 @@ namespace Takeover
         private string assetPathBase;
 
         [SerializeField]
-        private bool isPrefab;
-        [SerializeField]
         private bool hasBroken;
+        [SerializeField]
+        private bool setNativeSize = true;
 
         public event Action<ECamp> OnCampChange;
 
@@ -46,18 +48,24 @@ namespace Takeover
             }
             set
             {
-                _isBroken = value;
-
-                if (_isBroken != value && hasBroken)
-                    UpdateCampSprite();
+                if (_isBroken != value)
+                {
+                    _isBroken = value;
+                    if (hasBroken)
+                        UpdateCampSprite();
+                }
             }
         }
 
-        private string currentLoadingAssetPath;
+        private string loadingAssetPath;
         private GameObject childNode;
 
         private void UpdateCampSprite()
         {
+            bool isSprite = TryGetComponent<SpriteRenderer>(out var spriteRenderer);
+            bool isImage = TryGetComponent<Image>(out var image);
+            bool isPrefab = !isSprite && !isImage;
+
             string assetPath = assetPathBase;
             if (hasBroken && IsBroken)
                 assetPath += "_broken";
@@ -66,20 +74,16 @@ namespace Takeover
                 assetPath += ".prefab";
             else
                 assetPath += ".png";
-            if (currentLoadingAssetPath == assetPath)
+            if (loadingAssetPath == assetPath)
                 return; //已经在请求了
 
-            currentLoadingAssetPath = assetPath;
+            loadingAssetPath = assetPath;
             if (!Application.isPlaying)
             {
                 if (isPrefab)
-                {
                     LoadPrefabInEditor(assetPath);
-                }
                 else
-                {
                     LoadSpriteInEditor(assetPath);
-                }
             }
             else
             {
@@ -94,10 +98,10 @@ namespace Takeover
         {
             if (!gameObject) //对象已经销毁
                 return false;
-            if (userdata as string != currentLoadingAssetPath)
+            if (userdata as string != loadingAssetPath)
                 return false;
 
-            currentLoadingAssetPath = null;
+            loadingAssetPath = null;
             return true;
         }
 
@@ -111,26 +115,30 @@ namespace Takeover
             }
         }
 
+        private void SetImage(Sprite sprite)
+        {
+            if (TryGetComponent<SpriteRenderer>(out var spriteRenderer))
+            {
+                spriteRenderer.sprite = sprite;
+            }
+            else if (TryGetComponent<Image>(out var image))
+            {
+                image.sprite = sprite;
+                if (setNativeSize)
+                    image.SetNativeSize();
+            }
+        }
+
         private void OnSpriteLoaded(Sprite sprite, object userdata)
         {
             if (LoadCheck(userdata))
-            {
-                if (!childNode)
-                {
-                    childNode = new GameObject("Sprite", typeof(SpriteRenderer));
-                    childNode.transform.SetParent(transform, false);
-                }
-                childNode.GetComponent<SpriteRenderer>().sprite = sprite;
-            }
+                SetImage(sprite);
         }
 
         void Start()
         {
-            if (currentLoadingAssetPath == null && !childNode)
-            {
-                UpdateCampSprite();
-                OnCampChange?.InvokeSafe(m_CurCamp);
-            }
+            if (Global.LevelData != null) //根据当前阵营初始化一下
+                CurCamp = Global.LevelData.Camp;
         }
 
         void OnDestroy()
@@ -143,7 +151,7 @@ namespace Takeover
         private void LoadPrefabInEditor(string assetPath)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
-            currentLoadingAssetPath = null;
+            loadingAssetPath = null;
             if (!prefab)
             {
                 Debug.LogError($"Camp prefab not found: {assetPath}", this);
@@ -158,19 +166,14 @@ namespace Takeover
         private void LoadSpriteInEditor(string assetPath)
         {
             var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
-            currentLoadingAssetPath = null;
+            loadingAssetPath = null;
             if (!sprite)
             {
                 Debug.LogError($"Camp sprite not found: {assetPath}", this);
                 return;
             }
 
-            if (!childNode)
-            {
-                childNode = new GameObject("Sprite", typeof(SpriteRenderer));
-                childNode.transform.SetParent(transform, false);
-            }
-            childNode.GetComponent<SpriteRenderer>().sprite = sprite;
+            SetImage(sprite);
         }
 
         private void SelectSameCampGameObject()

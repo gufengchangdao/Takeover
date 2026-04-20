@@ -3,8 +3,6 @@ using GameFramework.AOT;
 using GameFramework.Hot;
 using Takeover;
 using UnityEngine;
-using UnityEngine.InputSystem.iOS;
-using UnityEngine.SceneManagement;
 
 public static class Global
 {
@@ -43,17 +41,20 @@ public static class Global
         LevelData = new LevelData();
         // LevelData.OnLoad();
 
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-        SceneManager.sceneLoaded += OnSceneLoaded;
         Application.quitting += OnQuit;
+        GFGlobal.Event.Subscribe<SceneLoadBeginEvent>(OnSceneBeginLoad);
 
         // 初始化流程
-        GFGlobal.Procedure.Init(new LevelSelectProcedure());
+        GFGlobal.Procedure.Init(
+            new ProcedureStart(),
+            new ProcedureLevelSelect(),
+            new ProcedureLevel()
+        );
 
         GFGlobal.UI.OpenPanel<HudSettingControl>();
-        GFGlobal.UI.OpenPanel<MainMenuControl>();
         GFGlobal.Sound.PlayMusic("musicMenuClass.mp3");
-        // SceneManager.LoadScene("LevelGreen1", LoadSceneMode.Additive);
+
+        GFGlobal.Procedure.ChangeState<ProcedureStart>();
     }
 
     // 退出游戏
@@ -67,8 +68,8 @@ public static class Global
         Log.Info("游戏退出");
     }
 
-    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    private static void OnSceneBeginLoad(object sender, SceneLoadBeginEvent data)
     {
-
+        GFGlobal.UI.OnStartLoading();
     }
 }

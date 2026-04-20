@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using GameFramework.AOT;
 
 namespace GameFramework.Hot
@@ -92,9 +93,12 @@ namespace GameFramework.Hot
 
         private sealed class EventBucket<TEvent> : IEventBucket where TEvent : GameEvent
         {
-            private readonly LinkedList<ListenerEntry> m_Listeners = new LinkedList<ListenerEntry>();
+            private readonly List<ListenerEntry> m_Listeners = new();
             private readonly Type m_EventType = typeof(TEvent);
             private int m_DispatchCount = 0;
+
+            private readonly List<GameEventHandler<TEvent>> curHandlers = new();
+            private readonly HashSet<GameEventHandler<TEvent>> removedHandlers = new();
 
             public bool IsEmpty
             {
@@ -103,101 +107,73 @@ namespace GameFramework.Hot
 
             public void Subscribe(GameEventHandler<TEvent> handler, int priority)
             {
-                LinkedListNode<ListenerEntry> current = m_Listeners.First;
-                while (current != null)
+                int insertIndex = -1;
+                for (int i = 0; i < m_Listeners.Count; i++)
                 {
-                    ListenerEntry entry = current.Value;
-                    if (!entry.Removed && entry.Handler == handler)
+                    ListenerEntry entry = m_Listeners[i];
+                    if (entry.Handler == handler)
                     {
-                        Log.Warning(
-                            "[Event] Event {0} already registered :{1}.{2}",
-                            m_EventType.Name,
-                            handler.Method.DeclaringType?.Name,
-                            handler.Method.Name);
+                        Log.Warning("[Event] Event {0} already registered :{1}.{2}",
+                                    m_EventType.Name,
+                                    handler.Method.DeclaringType?.Name,
+                                    handler.Method.Name);
                         return;
                     }
 
-                    if (priority > entry.Priority)
-                    {
-                        m_Listeners.AddBefore(current, new ListenerEntry(handler, priority));
-                        return;
-                    }
-
-                    current = current.Next;
+                    if (insertIndex == -1 && priority > entry.Priority)
+                        insertIndex = i;
                 }
-
-                m_Listeners.AddLast(new ListenerEntry(handler, priority));
+                if (insertIndex == -1)
+                    m_Listeners.Add(new ListenerEntry(handler, priority));
+                else
+                    m_Listeners.Insert(insertIndex, new ListenerEntry(handler, priority));
             }
 
             public void Unsubscribe(GameEventHandler<TEvent> handler)
             {
-                LinkedListNode<ListenerEntry> current = m_Listeners.First;
-                while (current != null)
+                for (int i = 0; i < m_Listeners.Count; i++)
                 {
-                    LinkedListNode<ListenerEntry> next = current.Next;
-                    ListenerEntry entry = current.Value;
-
-                    if (!entry.Removed && entry.Handler == handler)
+                    if (m_Listeners[i].Handler == handler)
                     {
-                        if (m_DispatchCount > 0)
-                            entry.Removed = true;
-                        else
-                            m_Listeners.Remove(current);
-
-                        break;
+                        m_Listeners.RemoveAt(i);
+                        if (m_DispatchCount > 0) //执行回调期间
+                            removedHandlers.Add(handler);
+                        return;
                     }
-
-                    current = next;
                 }
-
-                if (m_DispatchCount == 0)
-                    CleanupRemoved();
             }
 
             public void Dispatch(object sender, GameEvent e)
             {
                 TEvent eventArgs = (TEvent)e;
-                m_DispatchCount++;
-                try
+                if (m_DispatchCount == 0)
                 {
-                    LinkedListNode<ListenerEntry> current = m_Listeners.First;
-                    while (current != null && !eventArgs.handled)
+                    curHandlers.Clear();
+                    for (int i = 0; i < m_Listeners.Count; i++)
+                        curHandlers.Add(m_Listeners[i].Handler);
+                }
+                m_DispatchCount++;
+
+                for (int i = 0; i < curHandlers.Count && !eventArgs.handled; i++)
+                {
+                    GameEventHandler<TEvent> handler = curHandlers[i];
+                    if (removedHandlers.Contains(handler))
+                        continue;
+                    try
                     {
-                        // 先缓存 next，保证回调里反注册当前/后续监听时遍历仍然安全
-                        LinkedListNode<ListenerEntry> next = current.Next;
-                        ListenerEntry entry = current.Value;
-                        if (!entry.Removed)
-                        {
-                            try
-                            {
-                                entry.Handler(sender, eventArgs);
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.Error("[Event] Event {0} error : {1}", m_EventType.Name, ex);
-                            }
-                        }
-                        current = next;
+                        handler(sender, eventArgs);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("[Event] Event {0} error : {1}", m_EventType.Name, ex);
                     }
                 }
-                finally
-                {
-                    m_DispatchCount--;
 
-                    if (m_DispatchCount == 0)
-                        CleanupRemoved();
-                }
-            }
-
-            private void CleanupRemoved()
-            {
-                LinkedListNode<ListenerEntry> current = m_Listeners.First;
-                while (current != null)
+                m_DispatchCount--;
+                if (m_DispatchCount == 0)
                 {
-                    LinkedListNode<ListenerEntry> next = current.Next;
-                    if (current.Value.Removed)
-                        m_Listeners.Remove(current);
-                    current = next;
+                    curHandlers.Clear();
+                    removedHandlers.Clear();
                 }
             }
 
@@ -205,13 +181,11 @@ namespace GameFramework.Hot
             {
                 public readonly GameEventHandler<TEvent> Handler;
                 public readonly int Priority; //优先级越高越先执行
-                public bool Removed; //允许执行回调期间移除回调
 
                 public ListenerEntry(GameEventHandler<TEvent> handler, int priority)
                 {
                     Handler = handler;
                     Priority = priority;
-                    Removed = false;
                 }
             }
         }

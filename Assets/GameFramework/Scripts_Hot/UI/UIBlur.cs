@@ -16,14 +16,11 @@ namespace GameFramework.Hot
         [SerializeField]
         private int downSample = 8;
 
-        private static int[] s_DownSampleType = new[] { 1, 2, 4, 8 };
-
         private RenderTexture blurTexture;
         private Material blurMaterial;
 
         void Start()
         {
-            // Material BlurMaterial = new Material(Shader.Find("Hidden/DualBlur"));
             blurMaterial = new Material(Shader.Find("Hidden/GaussianBlur"));
             blurMaterial.SetFloat("_BlurRange", blurRange);
             Blur();
@@ -53,39 +50,60 @@ namespace GameFramework.Hot
         {
             Release();
 
-            // 获得摄像机内容
-            RenderTexture fullSizeRT = RenderTexture.GetTemporary(Screen.width, Screen.height);
-            Camera uiCamera = GFGlobal.UI.UICamera;
-            RenderTexture previousRT = uiCamera.targetTexture;
-            uiCamera.targetTexture = fullSizeRT;
-            uiCamera.Render(); // 渲染一帧到临时纹理
-            uiCamera.targetTexture = previousRT;
+            var rawImage = gameObject.GFGetOrAddComponent<RawImage>();
+            bool rawImageEnabled = rawImage.enabled;
+            rawImage.enabled = false; //先禁用掉，不要把RawImage的图像也渲染了
+
+            RenderTexture fullSizeRT = RenderTexture.GetTemporary(Screen.width, Screen.height, 24);
+            CaptureMainAndUI(fullSizeRT);
 
             blurMaterial.SetTexture("_MainTex", fullSizeRT);
 
-            // 使用双缓冲：创建两个临时纹理用于下采样和上采样
             int width = Screen.width / downSample;
             int height = Screen.height / downSample;
             RenderTexture buffer1 = RenderTexture.GetTemporary(width, height);
             RenderTexture buffer2 = RenderTexture.GetTemporary(width, height);
-            Graphics.Blit(fullSizeRT, buffer1); //先降采样
+
+            Graphics.Blit(fullSizeRT, buffer1);
             for (int i = 0; i < iteration; i++)
             {
                 Graphics.Blit(buffer1, buffer2, blurMaterial, 0);
                 Graphics.Blit(buffer2, buffer1, blurMaterial, 1);
             }
+
             blurTexture = RenderTexture.GetTemporary(width, height);
             Graphics.Blit(buffer1, blurTexture);
+
             RenderTexture.ReleaseTemporary(fullSizeRT);
             RenderTexture.ReleaseTemporary(buffer1);
             RenderTexture.ReleaseTemporary(buffer2);
 
-            // 清空材质球纹理引用
             blurMaterial.SetTexture("_MainTex", null);
 
-            var rawImage = gameObject.GFGetOrAddComponent<RawImage>();
             rawImage.texture = blurTexture;
+            rawImage.enabled = rawImageEnabled;
         }
+
+        private void CaptureMainAndUI(RenderTexture target)
+        {
+            Camera mainCamera = Camera.main;
+            Camera uiCamera = GFGlobal.UI.UICamera;
+
+            if (mainCamera == null)
+            {
+                var uiPrev = uiCamera.targetTexture;
+                uiCamera.targetTexture = target;
+                uiCamera.Render();
+                uiCamera.targetTexture = uiPrev;
+                return;
+            }
+
+            var mainPrev = mainCamera.targetTexture;
+            mainCamera.targetTexture = target;
+            mainCamera.Render();
+            mainCamera.targetTexture = mainPrev;
+        }
+
 
         void OnDestroy()
         {

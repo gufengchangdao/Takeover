@@ -18,13 +18,13 @@ namespace TableStructure
 /// </summary>
 public partial class TbCampaignData
 {
-    private readonly System.Collections.Generic.Dictionary<int, CampaignData> _dataMap;
+    private readonly System.Collections.Generic.Dictionary<ECamp, CampaignData> _dataMap;
     private readonly System.Collections.Generic.List<CampaignData> _dataList;
     
     public TbCampaignData(JSONNode _buf)
     {
         int count = _buf.Count;
-        _dataMap = new System.Collections.Generic.Dictionary<int, CampaignData>(count);
+        _dataMap = new System.Collections.Generic.Dictionary<ECamp, CampaignData>(count);
         _dataList = new System.Collections.Generic.List<CampaignData>(count);
         
         foreach(JSONNode _ele in _buf.Children)
@@ -32,16 +32,16 @@ public partial class TbCampaignData
             CampaignData _v;
             { if(!_ele.IsObject) { throw new SerializationException(); }  _v = global::TableStructure.CampaignData.DeserializeCampaignData(_ele);  }
             _dataList.Add(_v);
-            _dataMap.Add(_v.Id, _v);
+            _dataMap.Add(_v.Camp, _v);
         }
     }
 
-    public System.Collections.Generic.IReadOnlyDictionary<int, CampaignData> DataMap => _dataMap;
+    public System.Collections.Generic.IReadOnlyDictionary<ECamp, CampaignData> DataMap => _dataMap;
     public System.Collections.Generic.IReadOnlyList<CampaignData> DataList => _dataList;
 
-    public CampaignData GetOrDefault(int key) => _dataMap.TryGetValue(key, out var v) ? v : default;
-    public CampaignData Get(int key) => _dataMap[key];
-    public CampaignData this[int key] => _dataMap[key];
+    public CampaignData GetOrDefault(ECamp key) => _dataMap.TryGetValue(key, out var v) ? v : default;
+    public CampaignData Get(ECamp key) => _dataMap[key];
+    public CampaignData this[ECamp key] => _dataMap[key];
 
     public void ResolveRef(Tables tables)
     {

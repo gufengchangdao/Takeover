@@ -1,13 +1,14 @@
+using GameFramework.AOT;
 using GameFramework.Hot;
 
 namespace Takeover
 {
-    public class LevelSelectProcedure : ProcedureBase
+    public class ProcedureLevel : ProcedureBase
     {
         protected override void OnEnter(object userData)
         {
             base.OnEnter(userData);
-            GFGlobal.Scene.LoadScene($"LevelSelect{Global.LevelData.Camp}");
+            Log.Error("关卡" + userData);
         }
     }
 }

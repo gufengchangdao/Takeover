@@ -23,7 +23,7 @@ namespace Takeover
                 {
                     Global.LevelData.SetLevelData(Control.LevelDatas[campaign.camp]);
                     Close();
-                    GFGlobal.Procedure.StartProcudre<LevelSelectProcedure>();
+                    GFGlobal.Procedure.ChangeState<ProcedureLevelSelect>();
                 });
             }
             returnBtn.onClick.AddEventListener(e =>

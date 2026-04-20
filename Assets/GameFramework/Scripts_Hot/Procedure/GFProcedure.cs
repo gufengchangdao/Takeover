@@ -25,10 +25,10 @@ namespace GameFramework.Hot
             fsm = Fsm<GFProcedure>.Create(name, this, procedures);
         }
 
-        public void StartProcudre<T>() where T : ProcedureBase
+        public void ChangeState<T>(object userData = null) where T : ProcedureBase
         {
             Log.Info("[Procedure] start the first procedure : {0}", typeof(T));
-            fsm.Start<T>();
+            fsm.ChangeState<T>(userData);
         }
 
         public override void ModuleUpdate()

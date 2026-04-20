@@ -6,15 +6,38 @@ namespace GameFramework.Hot
 {
     public class GFScene : GFBaseModule
     {
-        public void LoadScene(string sceneName)
+        void Awake()
         {
-            SceneManager.LoadScene(sceneName);
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
-        public void LoadSceneAsync(string sceneName, Action<AsyncOperation> completed)
+        void OnDestroy()
         {
-            AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
-            op.completed += completed;
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        public void LoadScene(string sceneName, LoadSceneMode mode = LoadSceneMode.Single)
+        {
+            GFGlobal.Event.Fire(this, SceneLoadBeginEvent.Create(sceneName, mode));
+            SceneManager.LoadScene(sceneName, mode);
+        }
+
+        public void UnloadSceneAsync(string sceneName)
+        {
+            SceneManager.UnloadSceneAsync(sceneName);
+        }
+
+        public void LoadSceneAsync(string sceneName, LoadSceneMode mode = LoadSceneMode.Single, Action<AsyncOperation> completed = null)
+        {
+            GFGlobal.Event.Fire(this, SceneLoadBeginEvent.Create(sceneName, mode));
+            AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, mode);
+            if (completed != null)
+                op.completed += completed;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            GFGlobal.Event.Fire(this, SceneLoadEndEvent.Create(scene, mode));
         }
     }
 }

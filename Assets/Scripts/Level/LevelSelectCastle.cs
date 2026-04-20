@@ -1,5 +1,7 @@
 using GameFramework.AOT;
+using GameFramework.Hot;
 using Sirenix.OdinInspector;
+using Takeover;
 using UnityEngine;
 
 public class LevelSelectCastle : MonoBehaviour
@@ -21,6 +23,6 @@ public class LevelSelectCastle : MonoBehaviour
 
     void OnMouseUpAsButton()
     {
-        Log.Error($"关卡{level}");
+        GFGlobal.UI.OpenPanel<LevelIntroduceControl>(userData: level);
     }
 }

@@ -119,23 +119,12 @@ namespace GameFramework.Hot
             CurrentState = null;
         }
 
-        public void Start<S>()
-        {
-            Start(typeof(S));
-        }
-
         /// <summary>
-        /// 开始有限状态机。
+        /// 切换当前有限状态机状态。
         /// </summary>
-        /// <param name="stateType">要开始的有限状态机状态类型。</param>
-        public void Start(Type stateType)
+        /// <param name="stateType">要切换到的有限状态机状态类型。</param>
+        public void ChangeState(Type stateType, object userData = null)
         {
-            if (IsRunning)
-            {
-                Log.Error("[FSM] FSM is running, can not start again.");
-                return;
-            }
-
             FsmState<T> state = GetState(stateType);
             if (state == null)
             {
@@ -143,8 +132,22 @@ namespace GameFramework.Hot
                 return;
             }
 
+            // Type oldStateType = CurrentState.GetType();
+            CurrentState?.OnLeave();
+
             CurrentState = state;
-            CurrentState.OnEnter(null);
+            CurrentState.OnEnter(userData);
+
+            // 事件推送给实体自己
+            // if (Owner is Entity entity)
+            //     entity.Event.Fire(this, StateChangeEvent.Create(stateType, oldStateType));
+
+            ClearData();
+        }
+
+        public void ChangeState<S>(object userData = null)
+        {
+            ChangeState(typeof(S), userData);
         }
 
         public S GetState<S>() where S : FsmState<T>
@@ -246,43 +249,6 @@ namespace GameFramework.Hot
             }
 
             CurrentState.OnUpdate(elapseSeconds, realElapseSeconds);
-        }
-
-        /// <summary>
-        /// 切换当前有限状态机状态。
-        /// </summary>
-        /// <param name="stateType">要切换到的有限状态机状态类型。</param>
-        public void ChangeState(Type stateType, object userData = null)
-        {
-            if (CurrentState == null)
-            {
-                Log.Error("[FSM] Current state is invalid .Name: {0}, Type: {1}", Name, stateType.FullName);
-                return;
-            }
-
-            FsmState<T> state = GetState(stateType);
-            if (state == null)
-            {
-                Log.Error("[FSM] FSM '{0}.{1}' can not start state '{2}' which is not exist.", typeof(T), Name, stateType.FullName);
-                return;
-            }
-
-            Type oldStateType = CurrentState.GetType();
-            CurrentState.OnLeave();
-
-            CurrentState = state;
-            CurrentState.OnEnter(userData);
-
-            // 事件推送给实体自己
-            // if (Owner is Entity entity)
-            //     entity.Event.Fire(this, StateChangeEvent.Create(stateType, oldStateType));
-
-            ClearData();
-        }
-
-        public void ChangeState<S>(object userData = null)
-        {
-            ChangeState(typeof(S), userData);
         }
 
         /// <summary>

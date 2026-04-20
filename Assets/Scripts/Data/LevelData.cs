@@ -52,8 +52,8 @@ namespace Takeover
             levelData.LevelScore = new();
 
             // 统计关卡总数
-            foreach (var campaignData in GFGlobal.Tables.TbCampaignData.DataList)
-                if (campaignData.Camp == camp)
+            foreach (var data in GFGlobal.Tables.TbLevelData.DataList)
+                if (data.Camp == camp)
                     levelData.LevelCount++;
 
             if (!string.IsNullOrEmpty(jsonData))

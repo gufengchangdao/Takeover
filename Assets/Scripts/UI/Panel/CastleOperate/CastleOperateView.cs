@@ -41,7 +41,7 @@ namespace Takeover
                 btnUnitList.Add(node);
             }
 
-            groupNode.GetComponent<CampImage>().Camp = Control.Camp;
+            groupNode.GetComponent<Camp>().CurCamp = Control.Camp;
             var worldPos = Control.Castle.GetComponent<NodeMap>().GetTransform("UICenterPos").transform.position;
             groupNode.transform.localPosition = groupNode.transform.WorldToUILocalPosition(worldPos, GFGlobal.UI.UICamera);
 

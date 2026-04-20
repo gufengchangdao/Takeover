@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using GameFramework.AOT;
-using NUnit.Compatibility;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
@@ -72,17 +71,28 @@ namespace GameFramework.Hot
             cameraData.SetRenderer(1); // UI界面专门的RendererData，可以用模糊效果
             cameraData.volumeLayerMask = LayerMask.GetMask("UI");
             SceneManager.sceneLoaded += OnSceneLoaded;
-
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
             UpdateCursorVisible();
         }
 
         private void OnDestroy()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneUnloaded -= OnSceneUnloaded;
+        }
+
+        private void OnSceneUnloaded(Scene scene)
+        {
+            UpdateCameraStack();
         }
 
         // 场景加载好后把UI相机挂到主相机的Stack里
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            UpdateCameraStack();
+        }
+
+        private void UpdateCameraStack()
         {
             Camera mainCamera = Camera.main;
             var uiData = UICamera.GetUniversalAdditionalCameraData();
@@ -120,26 +130,22 @@ namespace GameFramework.Hot
             return $"{controlType.FullName}_{guid}";
         }
 
-#if USE_LUBAN
         public void OpenPanel<C>(int guid = 0, object userData = null) where C : BaseControl
         {
             string panelName = BaseControl.GetDefaultPanelName(typeof(C));
-            var data = GFGlobal.Tables.TbPanelData.GetOrDefault(panelName);
-            if (data == null)
+            bool hasData = GetPanelData(panelName, out string group, out string assetPath, out int _, out bool _);
+            if (!hasData)
             {
                 Log.Error("[UI] Panel not found: {0}", panelName);
                 return;
             }
 
             // 界面预制件默认路径
-            string path = data.AssetPath;
-            if (string.IsNullOrEmpty(path))
-                path = string.Format(GFGlobal.Tables.TbGlobalSettingData.DefaultPanelPath, panelName);
+            if (string.IsNullOrEmpty(assetPath))
+                assetPath = string.Format(GFGlobal.Tables.TbGlobalSettingData.DefaultPanelPath, panelName);
 
-            OpenPanel(typeof(C), data.Group, path, guid, userData);
+            OpenPanel(typeof(C), group, assetPath, guid, userData);
         }
-#endif
-
 
         public void OpenPanel<C>(string groupName, string assetPath, int guid = 0, object userData = null) where C : BaseControl
         {
@@ -201,7 +207,13 @@ namespace GameFramework.Hot
                 rectTransform.localScale = Vector3.one;
             }
 
-            var view = viewGo.GetComponent<AbstractBaseView>();
+            if (!viewGo.TryGetComponent<AbstractBaseView>(out var view))
+            {
+                Log.Error("{0}界面预制件没有挂载对应的View组件", viewGo.name);
+                ClosePanel(control.GetType(), control.Guid, true);
+                GameObject.Destroy(viewGo);
+                return;
+            }
             control.BindView(view);
             view.BindControl(control);
             view.OnInit(userData);
@@ -313,10 +325,9 @@ namespace GameFramework.Hot
         // 按照priority字段给面板排序
         private void UpdatePanelPriority(string nameWithGuid)
         {
-#if USE_LUBAN
             var control = panels[nameWithGuid];
             var view = control.View;
-            int priority = GFGlobal.Tables.TbPanelData[control.PanelName].Priority;
+            GetPanelData(control.PanelName, out var _, out var _, out int priority, out var _);
 
             int targetIndex = -1;
             foreach (var pair in panels)
@@ -324,7 +335,7 @@ namespace GameFramework.Hot
                 var control2 = pair.Value;
                 if (pair.Key != nameWithGuid && control2.UIGroup == control.UIGroup && control2.View)
                 {
-                    int p = GFGlobal.Tables.TbPanelData[control2.PanelName].Priority;
+                    GetPanelData(control2.PanelName, out var _, out var _, out int p, out var _);
                     if (p > priority)
                     {
                         if (targetIndex == -1)
@@ -336,6 +347,48 @@ namespace GameFramework.Hot
             }
             if (targetIndex != -1)
                 view.transform.SetSiblingIndex(targetIndex);
+        }
+
+        private List<BaseControl> tempControls = new();
+
+        // 开始加载时把配置了LoadingClose的面板都关闭
+        public void OnStartLoading()
+        {
+            tempControls.AddRange(panels.Values);
+            for (int i = 0; i < tempControls.Count; i++)
+            {
+                var control = tempControls[i];
+                if (!(control.UIGroup == UIGroup.SCENE || control.UIGroup == UIGroup.FILTER || control.UIGroup == UIGroup.MAIN))
+                    continue;
+
+                GetPanelData(control.PanelName, out var _, out var _, out var _, out bool loadingClose);
+                if (loadingClose)
+                    control.Close(true);
+            }
+            tempControls.Clear();
+        }
+
+
+        private bool GetPanelData(string panelName, out string group, out string assetPath, out int priority, out bool loadingClose)
+        {
+            group = UIGroup.MAIN;
+            assetPath = "";
+            priority = 0;
+            loadingClose = true;
+#if USE_LUBAN
+            var panelData = GFGlobal.Tables.TbPanelData.GetOrDefault(panelName);
+            if (panelData == null)
+                return false;
+
+            group = panelData.Group;
+            assetPath = panelData.AssetPath;
+            priority = panelData.Priority;
+            loadingClose = panelData.LoadingClose;
+            return true;
+#else
+            // 不使用luban需要自定义这一部分
+            Log.Error("不使用luban需要自定义面板数据这一部分");
+            return false;
 #endif
         }
     }
