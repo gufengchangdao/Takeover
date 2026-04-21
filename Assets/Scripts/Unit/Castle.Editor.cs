@@ -10,7 +10,6 @@ namespace Takeover
             var castles = GameObject.FindObjectsByType<Castle>(FindObjectsSortMode.None);
             foreach (var castle in castles)
             {
-                castle.mapDecorations.Clear();
                 UnityEditor.EditorUtility.SetDirty(castle);
             }
 
@@ -38,7 +37,6 @@ namespace Takeover
 
                 if (closestCastle != null)
                 {
-                    closestCastle.mapDecorations.Add(camp);
                     camp.CurCamp = closestCastle.GetComponent<Camp>().CurCamp;
                     UnityEditor.EditorUtility.SetDirty(closestCastle);
                     UnityEditor.EditorUtility.SetDirty(camp);

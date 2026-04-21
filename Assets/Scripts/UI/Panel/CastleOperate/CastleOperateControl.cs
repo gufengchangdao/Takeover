@@ -8,7 +8,7 @@ namespace Takeover
     {
         // 选中的城堡
         public Castle Castle { get; private set; }
-        public ECamp Camp => Castle ? Castle.Camp.CurCamp : default;
+        public ECamp Camp => Castle ? Castle.Camp : default;
 
         public List<string> showArmies;
 

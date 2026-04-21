@@ -19,10 +19,6 @@ public static class Global
     /// </summary>
     public static SkillTreeData SkillTree { get; private set; }
     /// <summary>
-    /// 当前关卡数据
-    /// </summary>
-    public static LevelInData LevelInData { get; private set; }
-    /// <summary>
     /// 游戏进度数据
     /// </summary>
     public static LevelData LevelData { get; private set; }

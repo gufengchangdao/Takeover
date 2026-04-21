@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using TableStructure;
 using GameFramework.Hot;
 using UnityEngine;
 using GameFramework.AOT;
+using System.Collections.Generic;
 
 namespace Takeover
 {
@@ -15,43 +15,40 @@ namespace Takeover
     {
         public string castleId;
 
-        [SerializeField]
-        private List<Camp> mapDecorations = new();
+        public UnitHealth Health { get; private set; }
 
-        public Camp Camp { get; private set; }
+        private Camp campComp;
+        public ECamp Camp => campComp.CurCamp;
 
-        protected void Awake()
+        /// <summary>
+        /// 驻城的小队
+        /// </summary>
+        public List<Army> Defenders { get; private set; } = new();
+
+        void Awake()
         {
-            Camp = GetComponent<Camp>();
-            Camp.OnCampChange += OnCampChange;
+            campComp = GetComponent<Camp>();
+            Health = GetComponent<UnitHealth>();
         }
 
-        void OnDestroy()
+        void Start()
         {
-            Camp.OnCampChange -= OnCampChange;
+            campComp.OnCampChange += OnCampChange;
+            OnCampChange(Camp);
         }
 
         void OnMouseDown()
         {
-            if (!GFGlobal.UI.HasPanel<CastleOperateControl>())
-                GFGlobal.UI.OpenPanel<CastleOperateControl>();
+            GFGlobal.UI.OpenPanel<CastleOperateControl>(userData: this);
         }
 
         private void OnCampChange(ECamp camp)
         {
-            // 附近装饰物“刷漆”
-            foreach (var decorate in mapDecorations)
-                decorate.CurCamp = camp;
-
             var spriteMouseEvent = GetComponentInChildren<SpriteMouseEvent>();
             if (spriteMouseEvent)
             {
                 spriteMouseEvent.OnMouseDownAction -= OnMouseDown;
                 spriteMouseEvent.OnMouseDownAction += OnMouseDown;
-            }
-            else
-            {
-                Log.Error($"城堡{name} {Camp.CurCamp}阵营没有找到SpriteMouseEvent组件，无法处理点击");
             }
         }
     }

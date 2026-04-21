@@ -37,6 +37,7 @@ public sealed partial class ArmyData : Luban.BeanBase
         { if(!_buf["base_army"].IsString) { throw new SerializationException(); }  BaseArmy = _buf["base_army"]; }
         BaseArmy_Ref = null;
         { if(!_buf["tech"].IsNumber) { throw new SerializationException(); }  Tech = _buf["tech"]; }
+        { if(!_buf["upkeep"].IsNumber) { throw new SerializationException(); }  Upkeep = _buf["upkeep"]; }
     }
 
     public static ArmyData DeserializeArmyData(JSONNode _buf)
@@ -112,6 +113,10 @@ public sealed partial class ArmyData : Luban.BeanBase
     /// 科技等级
     /// </summary>
     public readonly int Tech;
+    /// <summary>
+    /// 占用的补给数
+    /// </summary>
+    public readonly int Upkeep;
    
     public const int __ID__ = -1350794489;
     public override int GetTypeId() => __ID__;
@@ -143,6 +148,7 @@ public sealed partial class ArmyData : Luban.BeanBase
         + "unitType:" + UnitType + ","
         + "baseArmy:" + BaseArmy + ","
         + "tech:" + Tech + ","
+        + "upkeep:" + Upkeep + ","
         + "}";
     }
 }

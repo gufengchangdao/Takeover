@@ -70,6 +70,11 @@ namespace Takeover
 
         private string loadingAssetPath;
 
+        void OnDestroy()
+        {
+            OnCampChange = null;
+        }
+
         private void UpdateCampSprite()
         {
             bool isSprite = TryGetComponent<SpriteRenderer>(out var spriteRenderer);
@@ -159,11 +164,6 @@ namespace Takeover
 
             Sprite sprite = atlas.GetSprite(userdata as string);
             SetImage(sprite);
-        }
-
-        void OnDestroy()
-        {
-            OnCampChange = null;
         }
 
         private void LoadPrefabInEditor(string assetPath)
