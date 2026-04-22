@@ -95,7 +95,7 @@ namespace GameFramework.Hot
 
         private void OnLanguageChange(SystemLanguage old)
         {
-            var texts = GameObject.FindObjectsByType<TextHelper>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var texts = GameObject.FindObjectsByType<GFText>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (var text in texts)
                 text.OnLanguageChange();
         }

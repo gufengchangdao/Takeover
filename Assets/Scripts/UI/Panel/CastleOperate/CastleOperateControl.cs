@@ -17,7 +17,7 @@ namespace Takeover
             base.OnInit(userData);
             Castle = userData as Castle;
 
-            var castleData = GFGlobal.Tables.TbCastleData[Castle.castleId];
+            var castleData = GFGlobal.Tables.TbCastleData[Castle.TableId];
 
             Dictionary<string, (string, int)> temp = new();
             foreach (var soldierType in castleData.Armies)

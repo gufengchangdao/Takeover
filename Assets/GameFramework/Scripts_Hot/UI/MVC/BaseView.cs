@@ -17,7 +17,9 @@ namespace GameFramework.Hot
         {
             PlayInAnimation();
             foreach (var node in GetComponentsInChildren<BaseUINode>(true))
+            {
                 node.OnInit();
+            }
         }
 
         public virtual void OnRecycle()
@@ -83,10 +85,7 @@ namespace GameFramework.Hot
                 newNode = newGo.GFGetOrAddComponent<T>();
                 newNode.SourceId = id;
             }
-            else
-            {
-                newNode.OnInit();
-            }
+            newNode.OnInit();
             cloneSourceIds.Add(id);
             return newNode;
         }

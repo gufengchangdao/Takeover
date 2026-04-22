@@ -23,6 +23,19 @@ public static class Global
     /// </summary>
     public static LevelData LevelData { get; private set; }
 
+    public static LevelLogic LevelLogic { get; set; }
+
+    /// <summary>
+    /// 关卡内玩家自己的数据
+    /// </summary>
+    public static CombotantData CombotantData
+    {
+        get
+        {
+            return LevelLogic.Combotants[LevelData.Camp];
+        }
+    }
+
     public static void Main()
     {
         // 初始化DOTween

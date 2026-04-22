@@ -3,19 +3,20 @@ using UnityEngine;
 using GameFramework.AOT;
 using System.Collections.Generic;
 using UnityEngine.U2D;
+using UnityEngine.UI;
+using TMPro;
 
 namespace Takeover
 {
     public class CastleOperateView : BaseView<CastleOperateControl>
     {
-        [SerializeField]
-        private Transform groupNode;
-        [SerializeField]
-        private BtnArmyNode btnArmy;
-        [SerializeField]
-        private BtnArmyNode btnUpgrade;
+        [SerializeField] private RectTransform groupNode;
+        [SerializeField] private RectTransform groupBtn;
+        [SerializeField] private BtnArmyNode btnArmy;
+        [SerializeField] private BtnArmyNode btnUpgrade;
+        [SerializeField] private TextMeshProUGUI txtName;
 
-        private List<BaseUINode> btnUnitList;
+        private List<BtnArmyNode> btnUnitList;
 
         public override void OnInit(object userData)
         {
@@ -34,56 +35,63 @@ namespace Takeover
                 var node = CloneNode(btnArmy);
                 node.name = armyId;
                 int index = btnUnitList.Count;
-                node.localPosition = GetBtnPosition(index);
                 BtnOnClick(node.btn, (eventData) => OnClickUnitBtn(index));
                 var spriteAtals = GFGlobal.Resource.LoadAssetSync<SpriteAtlas>(GFGlobal.Tables.TbGlobalSettingData.ArmyIconPath);
                 node.imgIcon.sprite = spriteAtals.GetSprite(armyId);
                 btnUnitList.Add(node);
             }
 
-            groupNode.GetComponent<Camp>().CurCamp = Control.Camp;
-            var worldPos = Control.Castle.GetComponent<NodeMap>().GetTransform("UICenterPos").transform.position;
-            groupNode.transform.localPosition = groupNode.transform.WorldToUILocalPosition(worldPos, GFGlobal.UI.UICamera);
-
             // 升级
             BtnOnClick(btnUpgrade.btn, (data) =>
             {
                 Log.Error("升级");
             });
-            btnUpgrade.localPosition = GetBtnPosition(Control.showArmies.Count);
+            btnUpgrade.transform.SetAsLastSibling();
+
+            txtName.text = GFGlobal.Tables.TbCastleData[Control.Castle.TableId].ShowName;
+
+            OnGoldOrSupplyChange();
+
+            // 计算坐标
+            groupNode.GetComponent<Camp>().CurCamp = Control.Camp;
+            var worldPos = Control.Castle.GetComponent<NodeMap>().GetTransform("UICenterPos").transform.position;
+            groupNode.transform.localPosition = groupNode.transform.WorldToUILocalPosition(worldPos, GFGlobal.UI.UICamera);
+            RefreshGroupBtnPosition();
         }
 
-        // 根据索引设置每个按钮的位置，考虑btnCount为[1,6]的情况
-        private Vector2 GetBtnPosition(int index)
+        // 计算按钮相对位置，左边或者右边
+        private void RefreshGroupBtnPosition()
         {
-            int btnCount = Control.showArmies.Count + 1;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(groupBtn); //刷新自适应尺寸
 
-            float dist = btnArmy.localPosition.magnitude;
-            if (btnCount == 1)
-                return new Vector2(0, dist);
-            else if (btnCount == 2)
-            {
-                if (index == 0)
-                    return new Vector2(0, dist);
-                else
-                    return new Vector2(0, -dist);
-            }
-            else
-            {
-                int i;
-                if (index % 2 == 0)
-                    i = index / 2;
-                else
-                    i = (index - 1) / 2;
-                float rad = (0.5f + i) * 2 * Mathf.PI / btnCount;
-                return new Vector2(dist * Mathf.Sin(rad) * (index % 2 == 0 ? -1 : 1), dist * Mathf.Cos(rad));
-            }
+            var screenPos = RectTransformUtility.WorldToScreenPoint(GFGlobal.UI.UICamera, groupNode.position);
+            bool isLeftSide = screenPos.x < Screen.width * 0.5f;
+            float offsetX = (groupNode.rect.width + groupBtn.rect.width) * 0.5f;
 
+            var localPos = groupBtn.localPosition;
+            localPos.x = isLeftSide ? offsetX : -offsetX;
+            groupBtn.localPosition = localPos;
         }
 
         private void OnClickUnitBtn(int index)
         {
             Log.Error("点击了第" + index + "个单位");
+        }
+
+        // 金币或人口改变时
+        private void OnGoldOrSupplyChange()
+        {
+            for (int i = 0; i < Control.showArmies.Count; i++)
+            {
+                var node = btnUnitList[i];
+                bool canBuy = Global.CombotantData.CheckCanBuy(Control.showArmies[i]);
+                node.Gray = !canBuy;
+                node.btn.enabled = canBuy;
+            }
+
+            bool canUpgrade = Global.CombotantData.CheckCanUpgradeCastle(Control.Castle);
+            btnUpgrade.Gray = !canUpgrade;
+            btnUpgrade.enabled = canUpgrade;
         }
     }
 }

@@ -1,7 +1,6 @@
 using TableStructure;
 using GameFramework.Hot;
 using UnityEngine;
-using GameFramework.AOT;
 using System.Collections.Generic;
 
 namespace Takeover
@@ -13,7 +12,10 @@ namespace Takeover
     [RequireComponent(typeof(Camp))]
     public partial class Castle : MonoBehaviour
     {
-        public string castleId;
+        public const int MAX_LEVEL = 2;
+
+        [SerializeField] private string _tableId = CastleDataIDS.Castle;
+        public string TableId => _tableId;
 
         public UnitHealth Health { get; private set; }
 
@@ -24,6 +26,27 @@ namespace Takeover
         /// 驻城的小队
         /// </summary>
         public List<Army> Defenders { get; private set; } = new();
+
+        /// <summary>
+        /// 城堡当前等级
+        /// </summary>
+        public int Level { get; private set; }
+
+        /// <summary>
+        /// 升到下一级所需金币
+        /// </summary>
+        public int NextLevelCost
+        {
+            get
+            {
+                return Level switch
+                {
+                    0 => 350,
+                    1 => 500,
+                    _ => -1
+                };
+            }
+        }
 
         void Awake()
         {

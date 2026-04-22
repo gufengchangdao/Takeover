@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GameFramework.AOT;
 using TableStructure;
 using UnityEngine;
 
@@ -8,11 +9,27 @@ namespace Takeover
     {
         public List<Castle> Castles { get; private set; } = new();
         public List<Army> Armys { get; private set; } = new();
-        public List<CombotantData> Combotants { get; private set; } = new();
+        public Dictionary<ECamp, CombotantData> Combotants { get; private set; } = new();
 
         private bool lockAI = false;
 
         private float lifeTime = 0;
+
+        // 初始化关卡
+        protected override void Start()
+        {
+            base.Start();
+
+            foreach (var castle in FindObjectsByType<Castle>(FindObjectsSortMode.None))
+            {
+                Castles.Add(castle);
+
+                if (!Combotants.ContainsKey(castle.Camp))
+                {
+                    Combotants[castle.Camp] = new CombotantData(castle.Camp);
+                }
+            }
+        }
 
         public override void OnUpdate(float dt)
         {
@@ -23,8 +40,8 @@ namespace Takeover
                 return; //每秒更新一次
 
             // 增加资源
-            for (int i = 0; i < Combotants.Count; i++)
-                Combotants[i].AddResCounters();
+            foreach (var combotant in Combotants.Values)
+                combotant.AddResCounters();
 
             if (!lockAI)
                 UpdateCpuCombotantLogic(1);

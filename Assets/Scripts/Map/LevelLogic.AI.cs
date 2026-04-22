@@ -7,14 +7,12 @@ namespace Takeover
         // AI 的主循环
         private void UpdateCpuCombotantLogic(float dt)
         {
-            for (int i = 0; i < Combotants.Count; i++)
+            foreach (var combotant in Combotants.Values)
             {
-                CombotantData combotantData = Combotants[i];
-                if (combotantData.Camp == Global.LevelData.Camp)
+                if (combotant.Camp == Global.LevelData.Camp)
                     continue; //这是玩家
 
-                TryGoAttack(combotantData);
-
+                TryGoAttack(combotant);
             }
         }
 

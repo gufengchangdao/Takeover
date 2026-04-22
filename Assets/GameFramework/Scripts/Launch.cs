@@ -11,7 +11,7 @@ using YooAsset;
 namespace GameFramework.AOT
 {
     [DisallowMultipleComponent]
-    public class Launch : MonoBehaviour
+    public partial class Launch : MonoBehaviour
     {
         public static Launch Instance { get; private set; }
 

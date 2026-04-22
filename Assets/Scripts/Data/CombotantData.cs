@@ -67,6 +67,11 @@ namespace Takeover
 
         public int UltimateTimeSpeed { get; private set; }
 
+        public CombotantData(ECamp camp)
+        {
+            Camp = camp;
+        }
+
         public void AddResCounters()
         {
             Gold += GoldSpeed;
@@ -81,6 +86,12 @@ namespace Takeover
         {
             var armyData = GFGlobal.Tables.TbArmyData[armyId];
             return Gold >= armyData.Cost && SupplyPower - ArmyPower >= armyData.Upkeep;
+        }
+
+        public bool CheckCanUpgradeCastle(Castle castle)
+        {
+            var need = castle.NextLevelCost;
+            return need != -1 && Gold > need;
         }
     }
 }
