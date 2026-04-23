@@ -3,6 +3,8 @@ using GameFramework.AOT;
 using GameFramework.Hot;
 using Takeover;
 using UnityEngine;
+using UnityEngine.U2D;
+using YooAsset;
 
 public static class Global
 {

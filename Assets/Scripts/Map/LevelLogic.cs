@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GameFramework.AOT;
+using GameFramework.Hot;
 using TableStructure;
 using UnityEngine;
 
@@ -7,13 +8,29 @@ namespace Takeover
 {
     public partial class LevelLogic : UpdateableComponent
     {
+        private int _gameSpeed = 1;
+        public int GameSpeed
+        {
+            get
+            {
+                return _gameSpeed;
+            }
+            set
+            {
+                if (_gameSpeed == value)
+                    return;
+                _gameSpeed = value;
+                GFGlobal.Event.Fire(this, GameSpeedChangeEvent.Create(value));
+            }
+        }
+
         public List<Castle> Castles { get; private set; } = new();
         public List<Army> Armys { get; private set; } = new();
         public Dictionary<ECamp, CombotantData> Combotants { get; private set; } = new();
 
         private bool lockAI = false;
-
-        private float lifeTime = 0;
+        public bool Playing { get; private set; } = true;
+        public float LifeTime { get; private set; }
 
         // 初始化关卡
         protected override void Start()
@@ -35,8 +52,13 @@ namespace Takeover
         {
             base.OnUpdate(dt);
 
-            lifeTime += dt;
-            if (!(Mathf.Floor(lifeTime) > lifeTime))
+            if (!Playing)
+                return; //游戏被暂停了
+
+            dt *= GameSpeed;
+
+            LifeTime += dt;
+            if (!(Mathf.Floor(LifeTime) > LifeTime))
                 return; //每秒更新一次
 
             // 增加资源

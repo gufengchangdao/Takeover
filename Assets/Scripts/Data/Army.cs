@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GameFramework.Hot;
 using TableStructure;
 
@@ -6,7 +7,7 @@ namespace Takeover
     /// <summary>
     /// 一组士兵
     /// </summary>
-    public class Army
+    public partial class Army
     {
         public ECamp Camp { get; private set; }
         public int Upkeep { get; private set; }
@@ -16,6 +17,11 @@ namespace Takeover
         public Castle CurCastle { get; private set; }
 
         public bool AtCastle => CurCastle == null;
+
+        /// <summary>
+        /// 所有单位
+        /// </summary>
+        public List<Unit> Units { get; private set; } = new();
 
         private Fsm<Army> fsm;
 

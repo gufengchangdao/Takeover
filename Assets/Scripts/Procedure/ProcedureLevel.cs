@@ -21,7 +21,11 @@ namespace Takeover
         protected override void OnLeave()
         {
             GFGlobal.Event.Unsubscribe<SceneLoadEndEvent>(OnSceneLoaded);
+
+            GFGlobal.UI.ClosePanel<LevelControl>();
+
             Global.LevelLogic = null;
+
             base.OnLeave();
         }
 
@@ -29,6 +33,8 @@ namespace Takeover
         {
             var go = new GameObject(nameof(LevelLogic));
             Global.LevelLogic = go.AddComponent<LevelLogic>();
+
+            GFGlobal.UI.OpenPanel<LevelControl>();
         }
     }
 }

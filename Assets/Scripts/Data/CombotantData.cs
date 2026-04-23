@@ -23,20 +23,20 @@ namespace Takeover
         /// <summary>
         /// 金币
         /// </summary>
-        public float Gold { get; private set; }
-        public float BaseGoldSpeed { get; private set; }
+        public int Gold { get; private set; }
+        public int BaseGoldSpeed { get; private set; }
 
-        public float GoldSpeed
+        public int GoldSpeed
         {
             get
             {
                 if (ArmyOwneds == 0 || GoldSpeed == 0)
-                    return GoldSpeed;
+                    return BaseGoldSpeed;
 
                 //小队越多，金币会被扣得越狠
                 var sqCount = Mathf.Min(ArmyOwneds, 10) - 1;
                 var factor = (100 - (30 + sqCount * 5)) / 100;
-                return Mathf.Round(Mathf.Max(GoldSpeed * factor, 1));
+                return Mathf.RoundToInt(Mathf.Max(BaseGoldSpeed * factor, 1));
             }
         }
 

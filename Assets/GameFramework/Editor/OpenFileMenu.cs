@@ -3,7 +3,7 @@ using UnityEngine;
 
 public static class OpenFileMenu
 {
-    [MenuItem("Tools/打开PersistentDataPath目录")]
+    [MenuItem("GameFramework/打开PersistentDataPath目录")]
     public static void OpenPersistentDataPath()
     {
         string logDirectory = Application.persistentDataPath;

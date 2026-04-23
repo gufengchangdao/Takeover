@@ -27,6 +27,7 @@ namespace GameFramework.Hot
 
             string filePath = $"{GFGlobal.Config.datatableAssetPath}/{fileName}.json";
             Log.Info("[DataTable] Reading table file: {0}", filePath);
+
             var jsonData = GFGlobal.Resource.LoadAssetSync<TextAsset>(filePath, false).text;
             return JSON.Parse(jsonData);
         }

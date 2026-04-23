@@ -53,6 +53,23 @@ namespace GameFramework.Hot
             Log.Info("GameFramework init success!");
         }
 
+        void OnDestroy()
+        {
+            Config = null;
+            Save = null;
+            ReferencePool = null;
+            Event = null;
+            Timer = null;
+            Resource = null;
+            DataTable = null;
+            Input = null;
+            Procedure = null;
+            UI = null;
+            Sound = null;
+            Scene = null;
+            Camera = null;
+        }
+
         void Update()
         {
             Save.ModuleUpdate();

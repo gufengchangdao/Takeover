@@ -50,21 +50,33 @@ namespace GameFramework.Hot
             return handle.AllAssetObjects;
         }
 
-        public void LoadAssetAsync<T>(string location, Action<T, object> completed, object userData = null, bool cache = true) where T : UnityEngine.Object
+        private AssetHandle GetHandle<T>(string location, bool cache, bool isAsync) where T : UnityEngine.Object
         {
-            AssetHandle handle = pool.Get(location) as AssetHandle;
+            AssetHandle handle = null;
+            if (cache)
+                handle = pool.Get(location) as AssetHandle;
             if (handle == null)
-                handle = defaultPackage.LoadAssetAsync<T>(location);
-            handle.Completed += (h) => completed(h.GetAssetObject<T>(), userData);
+            {
+                if (isAsync)
+                    handle = defaultPackage.LoadAssetAsync<T>(location);
+                else
+                    handle = defaultPackage.LoadAssetSync<T>(location);
+            }
+            return handle;
+        }
+
+        public RequestHandle<T> LoadAssetAsync<T>(string location, Action<T, object> completed, object userData = null, bool cache = true) where T : UnityEngine.Object
+        {
+            AssetHandle handle = GetHandle<T>(location, cache, true);
+            RequestHandle<T> requestHandle = new(handle, completed, userData, cache);
             if (cache)
                 pool.Recycle(location, handle);
+            return requestHandle;
         }
 
         public T LoadAssetSync<T>(string location, bool cache = true) where T : UnityEngine.Object
         {
-            var handle = pool.Get(location) as AssetHandle;
-            if (handle == null)
-                handle = defaultPackage.LoadAssetSync<T>(location);
+            AssetHandle handle = GetHandle<T>(location, cache, false);
             if (cache)
                 pool.Recycle(location, handle);
             return handle.GetAssetObject<T>();
