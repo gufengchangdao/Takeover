@@ -21,6 +21,12 @@ namespace Takeover
 
             GFGlobal.Event.Subscribe<GameSpeedChangeEvent>(OnGameSpeedChange);
 
+            Global.CombotantData.Gold.OnChange += UpdateGold;
+            Global.CombotantData.GoldSpeed.OnChange += UpdateGold;
+            Global.CombotantData.Mana.OnChange += UpdateMana;
+            Global.CombotantData.SupplyPower.OnChange += UpdateSupply;
+            Global.CombotantData.ArmyPower.OnChange += UpdateSupply;
+            Global.LevelLogic.LifeTime.OnChange += UpdateGameTime;
             BtnOnClick(btnSpeed, e =>
             {
                 Control.ChangeGameSpeed();
@@ -31,19 +37,21 @@ namespace Takeover
             // TODO
 
             OnGameSpeedChange(null, null);
-            OnGoldChange();
-            OnSupplyChange();
-            OnSupplyPenaltyChange();
-            OnManaChange();
-            UpdateGameTime();
-
-            Tick(1, UpdateGameTime);
+            UpdateGold(0, 0);
+            UpdateMana(0, 0);
+            UpdateSupply(0, 0);
+            UpdateGameTime(Global.LevelLogic.LifeTime.Value, Global.LevelLogic.LifeTime.Value);
         }
 
         public override void OnRecycle()
         {
             GFGlobal.Event.Unsubscribe<GameSpeedChangeEvent>(OnGameSpeedChange);
-
+            Global.CombotantData.Gold.OnChange -= UpdateGold;
+            Global.CombotantData.GoldSpeed.OnChange -= UpdateGold;
+            Global.CombotantData.Mana.OnChange -= UpdateMana;
+            Global.CombotantData.SupplyPower.OnChange -= UpdateSupply;
+            Global.CombotantData.ArmyPower.OnChange -= UpdateSupply;
+            Global.LevelLogic.LifeTime.OnChange -= UpdateGameTime;
             base.OnRecycle();
         }
 
@@ -52,30 +60,27 @@ namespace Takeover
             imgSpeed.SetImageByStatus($"Speed{Global.LevelLogic.GameSpeed}");
         }
 
-        private void OnGoldChange()
+        private void UpdateGold(int cur, int old)
         {
-            var speed = Global.CombotantData.GoldSpeed;
-            txtGold.text = $"{Global.CombotantData.Gold}<color=#FFB23D>({(speed > 0 ? "+" : (speed < 0 ? "-" : ""))}{speed})</color>";
+            var speed = Global.CombotantData.GoldSpeed.Value;
+            txtGold.text = $"{Global.CombotantData.Gold.Value}<color=#FFB23D>({(speed > 0 ? "+" : (speed < 0 ? "-" : ""))}{speed})</color>";
         }
 
-        private void OnSupplyChange()
+        private void UpdateSupply(int cur, int old)
         {
-            txtSupply.text = "0<color=#22AE2E>(+3)</color>";
+            txtSupply.text = $"{Global.CombotantData.ArmyPower}/<color=#22AE2E>{Global.CombotantData.SupplyPower}</color>";
+            txtSupplyPenalty.text = $"-{Global.CombotantData.GoldSpeedPenalty}";
         }
 
-        private void OnSupplyPenaltyChange()
+        private void UpdateMana(int cur, int old)
         {
-            txtSupplyPenalty.text = "-1";
+            var speed = Global.CombotantData.ManaSpeed.Value;
+            txtMana.text = $"{Global.CombotantData.Mana}<color=#3D70FF>({(speed > 0 ? "+" : (speed < 0 ? "-" : ""))}{speed})</color>";
         }
 
-        private void OnManaChange()
+        private void UpdateGameTime(float cur, float old)
         {
-            txtMana.text = "0<color=#3D70FF>(+2)</color>";
-        }
-
-        private void UpdateGameTime()
-        {
-            txtTime.text = TimeUtility.FormatElapsedTime(Mathf.FloorToInt(Global.LevelLogic.LifeTime));
+            txtTime.text = TimeUtility.FormatElapsedTime(Mathf.FloorToInt(cur));
         }
     }
 }

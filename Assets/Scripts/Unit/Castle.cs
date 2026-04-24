@@ -48,6 +48,8 @@ namespace Takeover
             }
         }
 
+        public bool IsActive { get; private set; } = true;
+
         void Awake()
         {
             campComp = GetComponent<Camp>();

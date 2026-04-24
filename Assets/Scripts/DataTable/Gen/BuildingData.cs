@@ -13,29 +13,27 @@ using SimpleJSON;
 
 namespace TableStructure
 {
-public sealed partial class CastleData : Luban.BeanBase
+public sealed partial class BuildingData : Luban.BeanBase
 {
-    public CastleData(JSONNode _buf) 
+    public BuildingData(JSONNode _buf) 
     {
         { if(!_buf["id"].IsString) { throw new SerializationException(); }  Id = _buf["id"]; }
         { if(!_buf["show_name"].IsString) { throw new SerializationException(); }  ShowName = _buf["show_name"]; }
         ShowName_Ref = null;
-        { var __json0 = _buf["armies"]; if(!__json0.IsArray) { throw new SerializationException(); } Armies = new System.Collections.Generic.HashSet<ESoldierType>(/*__json0.Count*/); foreach(JSONNode __e0 in __json0.Children) { ESoldierType __v0;  { if(!__e0.IsNumber) { throw new SerializationException(); }  __v0 = (ESoldierType)__e0.AsInt; }  Armies.Add(__v0); }   }
         { if(!_buf["gold_speed"].IsNumber) { throw new SerializationException(); }  GoldSpeed = _buf["gold_speed"]; }
         { if(!_buf["supply_power"].IsNumber) { throw new SerializationException(); }  SupplyPower = _buf["supply_power"]; }
         { if(!_buf["mana_speed"].IsNumber) { throw new SerializationException(); }  ManaSpeed = _buf["mana_speed"]; }
         { if(!_buf["ultimate_time_speed"].IsNumber) { throw new SerializationException(); }  UltimateTimeSpeed = _buf["ultimate_time_speed"]; }
     }
 
-    public static CastleData DeserializeCastleData(JSONNode _buf)
+    public static BuildingData DeserializeBuildingData(JSONNode _buf)
     {
-        return new CastleData(_buf);
+        return new BuildingData(_buf);
     }
 
     public readonly string Id;
     public readonly string ShowName;
     public MultiLanguageText ShowName_Ref;
-    public readonly System.Collections.Generic.HashSet<ESoldierType> Armies;
     /// <summary>
     /// 金币增长速度
     /// </summary>
@@ -53,7 +51,7 @@ public sealed partial class CastleData : Luban.BeanBase
     /// </summary>
     public readonly int UltimateTimeSpeed;
    
-    public const int __ID__ = 2107357410;
+    public const int __ID__ = -818589538;
     public override int GetTypeId() => __ID__;
 
     public  void ResolveRef(Tables tables)
@@ -66,7 +64,6 @@ public sealed partial class CastleData : Luban.BeanBase
         return "{ "
         + "id:" + Id + ","
         + "showName:" + ShowName + ","
-        + "armies:" + Luban.StringUtil.CollectionToString(Armies) + ","
         + "goldSpeed:" + GoldSpeed + ","
         + "supplyPower:" + SupplyPower + ","
         + "manaSpeed:" + ManaSpeed + ","

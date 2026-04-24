@@ -9,6 +9,7 @@ namespace Takeover
     {
         public const int MAX_MANA = 500;
 
+        public bool IsPlayer { get; set; }
 
         /// <summary>
         /// 阵营
@@ -23,38 +24,29 @@ namespace Takeover
         /// <summary>
         /// 金币
         /// </summary>
-        public int Gold { get; private set; }
-        public int BaseGoldSpeed { get; private set; }
-
-        public int GoldSpeed
-        {
-            get
-            {
-                if (ArmyOwneds == 0 || GoldSpeed == 0)
-                    return BaseGoldSpeed;
-
-                //小队越多，金币会被扣得越狠
-                var sqCount = Mathf.Min(ArmyOwneds, 10) - 1;
-                var factor = (100 - (30 + sqCount * 5)) / 100;
-                return Mathf.RoundToInt(Mathf.Max(BaseGoldSpeed * factor, 1));
-            }
-        }
+        public BindableProperty<int> Gold = new();
+        public BindableProperty<int> BaseGoldSpeed = new();
+        /// <summary>
+        /// 金币惩罚，为正数
+        /// </summary>
+        public BindableProperty<int> GoldSpeedPenalty = new();
+        public BindableProperty<int> GoldSpeed = new();
 
         /// <summary>
         /// 法力
         /// </summary>
-        public int Mana { get; private set; }
-        public int ManaSpeed { get; private set; }
+        public BindableProperty<int> Mana = new();
+        public BindableProperty<int> ManaSpeed = new();
 
         /// <summary>
         /// 军队总补给
         /// </summary>
-        public int SupplyPower { get; private set; }
+        public BindableProperty<int> SupplyPower = new();
 
         /// <summary>
         /// 当前军队已经占用的补给
         /// </summary>
-        public int ArmyPower { get; private set; }
+        public BindableProperty<int> ArmyPower = new();
 
         /// <summary>
         /// 终极技能充能需要时间
@@ -65,7 +57,7 @@ namespace Takeover
         /// </summary>
         public int UltimateCurTime { get; private set; }
 
-        public int UltimateTimeSpeed { get; private set; }
+        public int UltimateTimeSpeed { get; set; }
 
         public CombotantData(ECamp camp)
         {
@@ -74,8 +66,8 @@ namespace Takeover
 
         public void AddResCounters()
         {
-            Gold += GoldSpeed;
-            Mana = Math.Min(Mana + ManaSpeed, MAX_MANA);
+            Gold.Value += GoldSpeed.Value;
+            Mana.Value = Math.Min(Mana.Value + ManaSpeed.Value, MAX_MANA);
             UltimateCurTime = Mathf.Min(UltimateCurTime + UltimateTimeSpeed, UltimateMaxTime);
         }
 
@@ -85,13 +77,19 @@ namespace Takeover
         public bool CheckCanBuy(string armyId)
         {
             var armyData = GFGlobal.Tables.TbArmyData[armyId];
-            return Gold >= armyData.Cost && SupplyPower - ArmyPower >= armyData.Upkeep;
+            return Gold.Value >= armyData.Cost && SupplyPower.Value - ArmyPower.Value >= armyData.Upkeep;
+        }
+
+        public void OnBuyArmy(string armyId)
+        {
+            var armyData = GFGlobal.Tables.TbArmyData[armyId];
+            Gold.Value = Mathf.Max(0, Gold.Value - armyData.Cost);
         }
 
         public bool CheckCanUpgradeCastle(Castle castle)
         {
             var need = castle.NextLevelCost;
-            return need != -1 && Gold > need;
+            return need != -1 && Gold.Value > need;
         }
     }
 }

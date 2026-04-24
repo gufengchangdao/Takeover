@@ -40,6 +40,11 @@ namespace GameFramework.Hot
         {
             OnChange = null;
         }
+
+        public override string ToString()
+        {
+            return Value?.ToString() ?? "null";
+        }
     }
 
     public class DictionaryProperty<TKey, TValue>

@@ -3,6 +3,7 @@ using GameFramework.AOT;
 using GameFramework.Hot;
 using TableStructure;
 using UnityEngine;
+using UnityEngine.WSA;
 
 namespace Takeover
 {
@@ -26,11 +27,13 @@ namespace Takeover
 
         public List<Castle> Castles { get; private set; } = new();
         public List<Army> Armys { get; private set; } = new();
+        public List<Building> Buildings { get; private set; } = new();
         public Dictionary<ECamp, CombotantData> Combotants { get; private set; } = new();
 
         private bool lockAI = false;
         public bool Playing { get; private set; } = true;
-        public float LifeTime { get; private set; }
+        private int lastSecond;
+        public BindableProperty<float> LifeTime = new();
 
         // 初始化关卡
         protected override void Start()
@@ -42,10 +45,25 @@ namespace Takeover
                 Castles.Add(castle);
 
                 if (!Combotants.ContainsKey(castle.Camp))
-                {
                     Combotants[castle.Camp] = new CombotantData(castle.Camp);
-                }
             }
+
+            Combotants[Global.LevelData.Camp].IsPlayer = true;
+
+            // 初始化资源
+            foreach (var camp in Combotants.Keys)
+                UpdateResSpeed(camp);
+
+            GFGlobal.Event.Subscribe<OnCastleStateChange>(OnCastleStateChange);
+            GFGlobal.Event.Subscribe<OnBuildingStateChange>(OnBuildingStateChange);
+        }
+
+        protected override void OnDestroy()
+        {
+            GFGlobal.Event.Unsubscribe<OnCastleStateChange>(OnCastleStateChange);
+            GFGlobal.Event.Unsubscribe<OnBuildingStateChange>(OnBuildingStateChange);
+            LifeTime.ClearAllEvents();
+            base.OnDestroy();
         }
 
         public override void OnUpdate(float dt)
@@ -57,9 +75,11 @@ namespace Takeover
 
             dt *= GameSpeed;
 
-            LifeTime += dt;
-            if (!(Mathf.Floor(LifeTime) > LifeTime))
-                return; //每秒更新一次
+            LifeTime.Value += dt;
+            if (!(Mathf.FloorToInt(LifeTime.Value) > lastSecond))
+                return;//每秒更新一次
+
+            lastSecond = Mathf.FloorToInt(LifeTime.Value);
 
             // 增加资源
             foreach (var combotant in Combotants.Values)
@@ -67,29 +87,6 @@ namespace Takeover
 
             if (!lockAI)
                 UpdateCpuCombotantLogic(1);
-        }
-
-        /// <summary>
-        /// 计算指定阵营小队补给占用
-        /// </summary>
-        public int CalcCombotantSquadsUpkeep(ECamp camp)
-        {
-            int upkeep = 0;
-
-            for (int i = 0; i < Armys.Count; i++)
-            {
-                if (Armys[i].Camp == camp)
-                    upkeep += Armys[i].Upkeep;
-            }
-            return upkeep;
-        }
-
-        /// <summary>
-        /// 计算两个城堡之间的路程
-        /// </summary>
-        private float GetCastleDistanceSq(Castle castle1, Castle castle2)
-        {
-            return 0;
         }
     }
 }

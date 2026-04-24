@@ -9,8 +9,9 @@ namespace Takeover
     /// </summary>
     public partial class Army
     {
+        public string TableId { get; private set; }
+
         public ECamp Camp { get; private set; }
-        public int Upkeep { get; private set; }
         /// <summary>
         /// 当前驻扎的城堡
         /// </summary>
@@ -23,15 +24,24 @@ namespace Takeover
         /// </summary>
         public List<Unit> Units { get; private set; } = new();
 
+        public ArmyHealthBar HealthBar { get; private set; }
+
         private Fsm<Army> fsm;
 
-        public Army()
+        public Army(ECamp camp)
         {
+            this.Camp = camp;
+
             fsm = Fsm<Army>.Create("Army", this,
             new ArmyStates.Idle(),
             new ArmyStates.Move(),
             new ArmyStates.Attack(),
             new ArmyStates.Dead());
+        }
+
+        public void OnEnterCastle(Castle castle)
+        {
+            CurCastle = castle;
         }
 
         /// <summary>
