@@ -6,26 +6,25 @@ namespace Takeover
     {
         public Army CreateArmy(ECamp camp, string armyId)
         {
-
-
-
-            Army army = new(camp);
+            Army army = new(armyId, camp);
+            Armies.Add(army);
             UpdateResSpeed(camp);
             return army;
         }
 
         public void RemoveArmy(Army army)
         {
-
+            Armies.Remove(army);
+            army.OnDestroy();
             UpdateResSpeed(army.Camp);
         }
 
         public int GetArmyCount(ECamp camp)
         {
             int count = 0;
-            for (int i = 0; i < Armys.Count; i++)
+            for (int i = 0; i < Armies.Count; i++)
             {
-                if (Armys[i].Camp == camp)
+                if (Armies[i].Camp == camp)
                     count++;
             }
             return count;
@@ -36,9 +35,7 @@ namespace Takeover
             ECamp camp = castle.Camp;
             Combotants[camp].OnBuyArmy(armyId);
             var army = CreateArmy(camp, armyId);
-
-
-
+            army.EnterCastle(castle);
             return army;
         }
     }

@@ -5,8 +5,8 @@ namespace Takeover
 {
     public class UnitHealth : MonoBehaviour
     {
-        private float m_CurHealth = 100;
-        public float CurHealth
+        private int m_CurHealth = 100;
+        public int CurHealth
         {
             get
             {
@@ -20,7 +20,20 @@ namespace Takeover
             }
         }
 
-        public float maxHealth = 100;
+        // 不走序列化，走配表
+        private int _maxHealth = 100;
+        public int MaxHealth
+        {
+            get
+            {
+                return _maxHealth;
+            }
+            set
+            {
+                _maxHealth = value;
+                CurHealth = _maxHealth;
+            }
+        }
 
         public bool IsInvincible { get; set; }
         public bool IsDead => CurHealth <= 0;
@@ -29,7 +42,7 @@ namespace Takeover
 
         void Awake()
         {
-            CurHealth = maxHealth;
+            CurHealth = MaxHealth;
         }
 
         void OnDestroy()

@@ -1,4 +1,6 @@
+using System.IO;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 [CustomEditor(typeof(Animator), true)]
@@ -9,11 +11,12 @@ public partial class AnimatorEditor : DecoratorEditor
         base.OnInspectorGUI();
 
         var animator = (Animator)target;
-        CreateAnimatiorControl(animator);
+        CreateAnimatorControl(animator);
+        CreateAnimatorClip(animator);
         ShowPanelAnimationButton(animator);
     }
 
-    private void CreateAnimatiorControl(Animator animator)
+    private void CreateAnimatorControl(Animator animator)
     {
         if (animator.runtimeAnimatorController != null)
             return;
@@ -44,5 +47,42 @@ public partial class AnimatorEditor : DecoratorEditor
         AssetDatabase.Refresh();
 
         Debug.Log($"动画控制器已创建: {path}");
+    }
+
+    private void CreateAnimatorClip(Animator animator)
+    {
+        if (animator.runtimeAnimatorController == null)
+            return;
+
+        if (!GUILayout.Button("创建Clip"))
+            return;
+
+        if (animator.runtimeAnimatorController is not AnimatorController controller)
+        {
+            Debug.LogWarning("当前 AnimatorController 不是可编辑的 AnimatorController，无法添加 Clip。");
+            return;
+        }
+
+        string controllerPath = AssetDatabase.GetAssetPath(controller);
+        string defaultDirectory = string.IsNullOrEmpty(controllerPath) ? "Assets" : Path.GetDirectoryName(controllerPath);
+        string defaultName = animator.gameObject.name;
+        string message = "选择动画 Clip 的保存位置";
+        string path = EditorUtility.SaveFilePanelInProject("新建动画 Clip", defaultName, "anim", message, defaultDirectory);
+
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        AnimationClip clip = new();
+        clip.name = Path.GetFileNameWithoutExtension(path);
+        AssetDatabase.CreateAsset(clip, path);
+        // controller.AddMotion(clip);
+        var newState = controller.layers[0].stateMachine.AddState(clip.name);
+        newState.motion = clip;
+
+        EditorUtility.SetDirty(controller);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        Debug.Log($"动画 Clip 已创建并添加到 Controller: {path}");
     }
 }

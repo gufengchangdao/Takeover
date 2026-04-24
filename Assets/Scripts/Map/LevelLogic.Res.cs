@@ -16,8 +16,8 @@ namespace Takeover
                 return 0;
 
             //小队越多，金币会被扣得越狠
-            var sqCount = Mathf.Min(armyCount, 10) - 1;
-            float factor = (100 - (30 + sqCount * 5)) / 100;
+            int sqCount = Mathf.Min(armyCount, 10) - 1;
+            float factor = (100 - (30 + sqCount * 5)) / 100f;
             int goldSpeed = Mathf.RoundToInt(Mathf.Max(baseGoldSpeed * factor, 1));
             return baseGoldSpeed - goldSpeed;
         }
@@ -59,10 +59,13 @@ namespace Takeover
 
             // 小队
             int armyPower = 0;
-            for (int i = 0; i < Armys.Count; i++)
+            for (int i = 0; i < Armies.Count; i++)
             {
-                var armyData = GFGlobal.Tables.TbArmyData[Armys[i].TableId];
-                armyPower += armyData.Upkeep;
+                if (Armies[i].Camp == camp)
+                {
+                    var armyData = GFGlobal.Tables.TbArmyData[Armies[i].TableId];
+                    armyPower += armyData.Upkeep;
+                }
             }
 
             var combotant = Combotants[camp];

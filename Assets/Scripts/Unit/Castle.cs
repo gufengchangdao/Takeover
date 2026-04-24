@@ -76,5 +76,16 @@ namespace Takeover
                 spriteMouseEvent.OnMouseDownAction += OnMouseDown;
             }
         }
+
+        public void OnArmyEnter(Army army)
+        {
+            if (!Defenders.Contains(army))
+                Defenders.Add(army);
+        }
+
+        public void OnArmyExit(Army army)
+        {
+            Defenders.Remove(army);
+        }
     }
 }

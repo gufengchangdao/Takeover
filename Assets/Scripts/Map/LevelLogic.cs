@@ -3,7 +3,6 @@ using GameFramework.AOT;
 using GameFramework.Hot;
 using TableStructure;
 using UnityEngine;
-using UnityEngine.WSA;
 
 namespace Takeover
 {
@@ -26,7 +25,7 @@ namespace Takeover
         }
 
         public List<Castle> Castles { get; private set; } = new();
-        public List<Army> Armys { get; private set; } = new();
+        public List<Army> Armies { get; private set; } = new();
         public List<Building> Buildings { get; private set; } = new();
         public Dictionary<ECamp, CombotantData> Combotants { get; private set; } = new();
 
@@ -34,6 +33,28 @@ namespace Takeover
         public bool Playing { get; private set; } = true;
         private int lastSecond;
         public BindableProperty<float> LifeTime = new();
+
+        private Transform _unitsTransform;
+        public Transform UnitTransform
+        {
+            get
+            {
+                if (!_unitsTransform)
+                    _unitsTransform = new GameObject("Units").transform;
+                return _unitsTransform;
+            }
+        }
+
+        private Transform _armyHealthTransform;
+        public Transform ArmyHealthTransform
+        {
+            get
+            {
+                if (!_armyHealthTransform)
+                    _armyHealthTransform = new GameObject("ArmyHealth").transform;
+                return _armyHealthTransform;
+            }
+        }
 
         // 初始化关卡
         protected override void Start()
@@ -87,6 +108,14 @@ namespace Takeover
 
             if (!lockAI)
                 UpdateCpuCombotantLogic(1);
+        }
+
+        void LateUpdate()
+        {
+            for (int i = 0; i < Armies.Count; i++)
+            {
+                Armies[i].LateUpdate();
+            }
         }
     }
 }
