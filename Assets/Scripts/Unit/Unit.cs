@@ -10,6 +10,8 @@ namespace Takeover
     {
         public UnitHealth Health { get; private set; }
 
+        public bool IsActive => !Health.IsDead;
+
         void Awake()
         {
             Health = GetComponent<UnitHealth>();
@@ -18,6 +20,18 @@ namespace Takeover
         public void Init(int maxHealth)
         {
             Health.MaxHealth = maxHealth;
+        }
+
+        public void OnEnterCastle(Castle castle)
+        {
+            transform.position = castle.transform.position;
+            gameObject.SetActive(false);
+        }
+
+        public void OnExitCastle()
+        {
+            if (!Health.IsDead)
+                gameObject.SetActive(true);
         }
     }
 }

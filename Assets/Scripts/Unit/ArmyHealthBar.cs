@@ -6,22 +6,19 @@ namespace Takeover
 {
     public class ArmyHealthBar : MonoBehaviour
     {
-        public const int HEALTH_BAR_HEIGHT = 80;
-        public const int HEALTH_BAR_CASTLE_HEIGHT = HEALTH_BAR_HEIGHT + 20;
+        public const float HEALTH_BAR_HEIGHT = 1;
+        public const float HEALTH_BAR_CASTLE_HEIGHT = HEALTH_BAR_HEIGHT + 0.2f;
 
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private Camp camp;
+        [SerializeField] private SpriteRenderer imgIcon;
 
         private static int SHADER_CLIP_ID = Shader.PropertyToID("_ClipUvUp");
 
-        void Awake()
-        {
-            spriteRenderer.material = new Material(spriteRenderer.sharedMaterial);
-        }
-
-        public void SetCamp(ECamp camp)
+        public void Init(ECamp camp, Sprite icon)
         {
             this.camp.CurCamp = camp;
+            imgIcon.sprite = icon;
         }
 
         public void SetHealthPercent(float percent)
@@ -29,20 +26,32 @@ namespace Takeover
             spriteRenderer.material.SetFloat(SHADER_CLIP_ID, percent);
         }
 
+        private float lastHealthPercent = -1;
+
         // 更新血量和位置
-        public void UpdateHealthAndPosition(List<Unit> units, bool inCastle)
+        public void UpdateHealthAndPosition(List<Unit> units, float healthPercent, bool inCastle)
         {
-            int totalMax = 0;
-            int totalCur = 0;
+            if (!Mathf.Approximately(lastHealthPercent, healthPercent))
+            {
+                lastHealthPercent = healthPercent;
+                SetHealthPercent(1 - healthPercent);
+            }
+
+            float height = inCastle ? HEALTH_BAR_CASTLE_HEIGHT : HEALTH_BAR_HEIGHT;
+            float x = 0, y = 0;
+            int count = 0;
             for (int i = 0; i < units.Count; i++)
             {
                 var unit = units[i];
-                totalMax += unit.Health.MaxHealth;
-                totalCur += unit.Health.CurHealth;
+                if (!unit.Health.IsDead)
+                {
+                    var pos = unit.Health.transform.position;
+                    x += pos.x;
+                    y += pos.y;
+                    count++;
+                }
             }
-            SetHealthPercent(totalCur * 1f / totalMax);
-
-            int height = inCastle ? HEALTH_BAR_CASTLE_HEIGHT : HEALTH_BAR_HEIGHT;
+            transform.position = new Vector2(x / count, y / count + height);
         }
     }
 }

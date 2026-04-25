@@ -36,8 +36,8 @@ namespace Takeover
                 node.name = armyId;
                 int index = btnUnitList.Count;
                 BtnOnClick(node.btn, (eventData) => OnClickUnitBtn(index));
-                var spriteAtals = GFGlobal.Resource.LoadAssetSync<SpriteAtlas>(GFGlobal.Tables.TbGlobalSettingData.ArmyIconPath);
-                node.imgIcon.sprite = spriteAtals.GetSprite(armyId);
+                int cost = GFGlobal.Tables.TbArmyData[armyId].Cost;
+                node.Init(GFGlobal.Tables.TbGlobalSettingData.ArmyIconPath, armyId, cost);
                 btnUnitList.Add(node);
             }
 
@@ -57,6 +57,14 @@ namespace Takeover
             var worldPos = Control.Castle.GetComponent<NodeMap>().GetTransform("UICenterPos").transform.position;
             groupNode.transform.localPosition = groupNode.transform.WorldToUILocalPosition(worldPos, GFGlobal.UI.UICamera);
             RefreshGroupBtnPosition();
+
+            Global.CombotantData.Gold.AddOnChange(OnGoldOrSupplyChange);
+        }
+
+        public override void OnRecycle()
+        {
+            Global.CombotantData.Gold.RemoveOnChange(OnGoldOrSupplyChange);
+            base.OnRecycle();
         }
 
         // 计算按钮相对位置，左边或者右边
@@ -75,7 +83,9 @@ namespace Takeover
 
         private void OnClickUnitBtn(int index)
         {
-            Log.Error("点击了第" + index + "个单位");
+            string armyId = Control.showArmies[index];
+            if (Global.LevelLogic.BuyArmy(Control.Castle, armyId))
+                Close();
         }
 
         // 金币或人口改变时
@@ -86,12 +96,10 @@ namespace Takeover
                 var node = btnUnitList[i];
                 bool canBuy = Global.CombotantData.CheckCanBuy(Control.showArmies[i]);
                 node.Gray = !canBuy;
-                node.btn.enabled = canBuy;
             }
 
             bool canUpgrade = Global.CombotantData.CheckCanUpgradeCastle(Control.Castle);
             btnUpgrade.Gray = !canUpgrade;
-            btnUpgrade.enabled = canUpgrade;
         }
     }
 }

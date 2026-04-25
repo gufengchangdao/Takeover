@@ -21,6 +21,9 @@ public sealed partial class GlobalSettingData : Luban.BeanBase
         { if(!_buf["default_panel_path"].IsString) { throw new SerializationException(); }  DefaultPanelPath = _buf["default_panel_path"]; }
         { if(!_buf["sound_path"].IsString) { throw new SerializationException(); }  SoundPath = _buf["sound_path"]; }
         { if(!_buf["level_scene_path"].IsString) { throw new SerializationException(); }  LevelScenePath = _buf["level_scene_path"]; }
+        { if(!_buf["army_prefab_path"].IsString) { throw new SerializationException(); }  ArmyPrefabPath = _buf["army_prefab_path"]; }
+        { if(!_buf["unit_path"].IsString) { throw new SerializationException(); }  UnitPath = _buf["unit_path"]; }
+        { if(!_buf["unit_line_parefab_path"].IsString) { throw new SerializationException(); }  UnitLineParefabPath = _buf["unit_line_parefab_path"]; }
     }
 
     public static GlobalSettingData DeserializeGlobalSettingData(JSONNode _buf)
@@ -44,6 +47,18 @@ public sealed partial class GlobalSettingData : Luban.BeanBase
     /// 关卡场景目录
     /// </summary>
     public readonly string LevelScenePath;
+    /// <summary>
+    /// 小队
+    /// </summary>
+    public readonly string ArmyPrefabPath;
+    /// <summary>
+    /// 士兵预制件
+    /// </summary>
+    public readonly string UnitPath;
+    /// <summary>
+    /// 单位路径曲线
+    /// </summary>
+    public readonly string UnitLineParefabPath;
    
     public const int __ID__ = -262071721;
     public override int GetTypeId() => __ID__;
@@ -59,6 +74,9 @@ public sealed partial class GlobalSettingData : Luban.BeanBase
         + "defaultPanelPath:" + DefaultPanelPath + ","
         + "soundPath:" + SoundPath + ","
         + "levelScenePath:" + LevelScenePath + ","
+        + "armyPrefabPath:" + ArmyPrefabPath + ","
+        + "unitPath:" + UnitPath + ","
+        + "unitLineParefabPath:" + UnitLineParefabPath + ","
         + "}";
     }
 }

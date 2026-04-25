@@ -1,4 +1,5 @@
 using TableStructure;
+using UnityEngine;
 
 namespace Takeover
 {
@@ -6,16 +7,17 @@ namespace Takeover
     {
         public Army CreateArmy(ECamp camp, string armyId)
         {
-            Army army = new(armyId, camp);
-            Armies.Add(army);
-            UpdateResSpeed(camp);
-            return army;
+            // Army army = new(armyId, camp);
+            // Armies.Add(army);
+            // UpdateResSpeed(camp);
+            // return army;
+            return null;
         }
 
         public void RemoveArmy(Army army)
         {
             Armies.Remove(army);
-            army.OnDestroy();
+            GameObject.Destroy(army);
             UpdateResSpeed(army.Camp);
         }
 
@@ -30,13 +32,16 @@ namespace Takeover
             return count;
         }
 
-        public Army BuyArmy(Castle castle, string armyId)
+        public bool BuyArmy(Castle castle, string armyId)
         {
             ECamp camp = castle.Camp;
+            if (!Combotants[camp].CheckCanBuy(armyId))
+                return false;
+
             Combotants[camp].OnBuyArmy(armyId);
             var army = CreateArmy(camp, armyId);
             army.EnterCastle(castle);
-            return army;
+            return true;
         }
     }
 }

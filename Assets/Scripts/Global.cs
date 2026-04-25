@@ -25,7 +25,7 @@ public static class Global
     /// </summary>
     public static LevelData LevelData { get; private set; }
 
-    public static LevelLogic LevelLogic { get; set; }
+    public static LevelLogic LevelLogic { get; private set; }
 
     /// <summary>
     /// 关卡内玩家自己的数据
@@ -37,6 +37,8 @@ public static class Global
             return LevelLogic.Combotants[LevelData.Camp];
         }
     }
+
+    public static MapPathManager MapPath { get; private set; }
 
     public static void Main()
     {
@@ -76,5 +78,17 @@ public static class Global
     private static void OnQuit()
     {
         Log.Info("游戏退出");
+    }
+
+    public static void OnEnterLevel(LevelLogic levelLogic)
+    {
+        LevelLogic = levelLogic;
+        MapPath = GameObject.FindAnyObjectByType<MapPathManager>();
+    }
+
+    public static void OnExitLevel()
+    {
+        LevelLogic = null;
+        MapPath = null;
     }
 }

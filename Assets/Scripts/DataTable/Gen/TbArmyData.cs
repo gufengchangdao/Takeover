@@ -14,7 +14,7 @@ using SimpleJSON;
 namespace TableStructure
 {
 /// <summary>
-/// 单位表
+/// 小队表
 /// </summary>
 public partial class TbArmyData
 {

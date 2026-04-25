@@ -44,6 +44,18 @@ public partial class TbGlobalSettingData
     /// 关卡场景目录
     /// </summary>
      public string LevelScenePath => _data.LevelScenePath;
+    /// <summary>
+    /// 小队
+    /// </summary>
+     public string ArmyPrefabPath => _data.ArmyPrefabPath;
+    /// <summary>
+    /// 士兵预制件
+    /// </summary>
+     public string UnitPath => _data.UnitPath;
+    /// <summary>
+    /// 单位路径曲线
+    /// </summary>
+     public string UnitLineParefabPath => _data.UnitLineParefabPath;
     
     public void ResolveRef(Tables tables)
     {

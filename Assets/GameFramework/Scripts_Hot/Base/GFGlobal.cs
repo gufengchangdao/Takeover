@@ -16,6 +16,7 @@ namespace GameFramework.Hot
         public static GFDataTable DataTable { get; private set; }
 #if USE_LUBAN
         public static TableStructure.Tables Tables => DataTable.Tables; //直接拿出来，方便获取
+        public static TableStructure.TbGlobalSettingData GlobalTableData => Tables.TbGlobalSettingData;
 #endif
         public static GFInput Input { get; private set; }
         public static GFProcedure Procedure { get; private set; }

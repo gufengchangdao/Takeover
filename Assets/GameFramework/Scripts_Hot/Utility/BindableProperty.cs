@@ -24,26 +24,47 @@ namespace GameFramework.Hot
 
                 var oldValue = m_Value;
                 m_Value = value;
-                OnChange?.InvokeSafe(value, oldValue);
+                onChangeArgs?.Invoke(value, oldValue);
+                onChangeEmpty?.Invoke();
             }
         }
 
-        public event Action<T, T> OnChange;
+        private event Action<T, T> onChangeArgs;
+        private event Action onChangeEmpty;
 
-        public BindableProperty(T defaultValue = default, Action<T, T> onValueChange = null)
+        public BindableProperty(T defaultValue = default, Action<T, T> onChangeArgs = null, Action onChangeEmpty = null)
         {
             m_Value = defaultValue;
-            OnChange = onValueChange;
+            this.onChangeArgs = onChangeArgs;
+            this.onChangeEmpty = onChangeEmpty;
         }
 
         public void ClearAllEvents()
         {
-            OnChange = null;
+            onChangeArgs = null;
+            onChangeEmpty = null;
         }
 
         public override string ToString()
         {
             return Value?.ToString() ?? "null";
+        }
+
+        public void AddOnChange(Action onChange)
+        {
+            onChangeEmpty += onChange;
+        }
+        public void AddOnChange(Action<T, T> onChange)
+        {
+            onChangeArgs += onChange;
+        }
+        public void RemoveOnChange(Action onChange)
+        {
+            onChangeEmpty -= onChange;
+        }
+        public void RemoveOnChange(Action<T, T> onChange)
+        {
+            onChangeArgs -= onChange;
         }
     }
 

@@ -1,31 +1,35 @@
-using System;
-using GameFramework.AOT;
 using GameFramework.Hot;
 using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
 
 namespace Takeover
 {
     public class BtnArmyNode : BaseUINode
     {
-        public Image imgIcon;
+        public GFImage imgBg;
+        public GFImage imgIcon;
         public TextMeshProUGUI txtPrice;
         public GFButton btn;
 
-        private Material mat;
 
         public override void OnInit()
         {
             base.OnInit();
+            foreach (var camp in GetComponentsInChildren<Camp>())
+                camp.CurCamp = Global.CombotantData.Camp;
 
-            if (!mat)
-            {
-                mat = GFGlobal.Resource.LoadAssetSync<Material>("Assets/Content/UI/Material/CommonUIMat.mat");
-                mat = new Material(mat);
-                GetComponent<Image>().material = mat;
-                imgIcon.material = mat;
-            }
+            Gray = false;
+        }
+
+        public void Init(string atlasPath, string imageName, int price)
+        {
+            imgIcon.SetImageAsync(atlasPath, imageName);
+            txtPrice.text = price + "";
+        }
+
+        public override void OnRecycle()
+        {
+            btn.onClick.Clear();
+            base.OnRecycle();
         }
 
         private bool m_Gray = false;
@@ -40,7 +44,8 @@ namespace Takeover
                 if (m_Gray != value)
                 {
                     m_Gray = value;
-                    mat.SetFloat("_GreyscaleBlend", value ? 1 : 0);
+                    imgBg.SetGray(value);
+                    imgIcon.SetGray(value);
                 }
             }
         }

@@ -23,6 +23,31 @@ namespace GameFramework.Hot
             asset = GFGlobal.Resource.LoadAssetSync<InputActionAsset>(GFGlobal.Config.inputActionAssetPath, false);
             asset.Enable();
             playerInput.actions = asset;
+
+            AddInputActions();
+        }
+
+        private void AddInputActions()
+        {
+            foreach (var inputData in GFGlobal.Tables.TbInputData.DataList)
+            {
+                var actionMap = asset.FindActionMap(inputData.Map);
+                if (actionMap == null)
+                {
+                    actionMap = asset.AddActionMap(inputData.Map);
+                    actionMap.Enable();
+                }
+
+                Log.Info($"[Input] Add Action {inputData.Id}");
+                var action = actionMap.FindAction(inputData.Id);
+                if (action != null)
+                {
+                    Log.Error($"[Input] Action {inputData.Id} have already existed");
+                    continue;
+                }
+                action = actionMap.AddAction(inputData.Id, (InputActionType)inputData.Type); //如果已经存在会报错
+                action.AddBinding(inputData.Path);
+            }
         }
 
         public InputAction GetAction(string mapName, string actionName)

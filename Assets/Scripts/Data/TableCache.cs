@@ -1,5 +1,7 @@
 using GameFramework.Hot;
 using TableStructure;
+using UnityEngine;
+using UnityEngine.U2D;
 
 namespace Takeover
 {

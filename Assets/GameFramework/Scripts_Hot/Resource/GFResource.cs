@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
 using GameFramework.AOT;
+using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.PlayerLoop;
 using UnityEngine.SceneManagement;
 using YooAsset;
 
 namespace GameFramework.Hot
 {
-    /// <summary>
-    /// TODO 缓存这一块先不做，我还不知道怎么规划
-    /// </summary>
     public class GFResource : GFBaseModule
     {
         private ResourcePackage defaultPackage;
@@ -20,6 +19,7 @@ namespace GameFramework.Hot
         {
             pool = GFGlobal.ReferencePool.CreatePool<string, HandleBase>("Resource", 1, -1, null, handle => handle.Release());
             defaultPackage = YooAssets.GetPackage(GameConfig.DefaultPackage);
+            GFGlobal.Event.Subscribe<SceneLoadBeginEvent>(OnSceneLoadBegin);
         }
 
         public string LoadRawFileTextNoCache(string location)
@@ -82,9 +82,29 @@ namespace GameFramework.Hot
             return handle.GetAssetObject<T>();
         }
 
+        public GameObject InstantiatePrefab(string location, Transform parent = null)
+        {
+            var prefab = LoadAssetSync<GameObject>(location);
+            if (parent)
+                return Instantiate(prefab, parent);
+            else
+                return Instantiate(prefab);
+        }
+
         public void LoadSceneSync(string location, LoadSceneMode sceneMode = LoadSceneMode.Single)
         {
             SceneHandle sceneHandle = defaultPackage.LoadSceneSync(location, sceneMode);
+        }
+
+        public void ReleaseCache()
+        {
+            pool.Clear();
+        }
+
+        // 加载场景前释放一下句柄
+        private void OnSceneLoadBegin(object sender, SceneLoadBeginEvent data)
+        {
+            ReleaseCache();
         }
     }
 }

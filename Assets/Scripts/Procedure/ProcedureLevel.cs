@@ -24,7 +24,7 @@ namespace Takeover
 
             GFGlobal.UI.ClosePanel<LevelControl>();
 
-            Global.LevelLogic = null;
+            Global.OnExitLevel();
 
             base.OnLeave();
         }
@@ -32,7 +32,7 @@ namespace Takeover
         private void OnSceneLoaded(object sender, SceneLoadEndEvent data)
         {
             var go = new GameObject(nameof(LevelLogic));
-            Global.LevelLogic = go.AddComponent<LevelLogic>();
+            Global.OnEnterLevel(go.AddComponent<LevelLogic>());
 
             GFGlobal.UI.OpenPanel<LevelControl>();
         }

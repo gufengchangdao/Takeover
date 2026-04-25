@@ -1,14 +1,17 @@
 using System.Collections.Generic;
+using GameFramework.AOT;
 using GameFramework.Hot;
 using TableStructure;
 using UnityEngine;
+using UnityEngine.U2D;
 
 namespace Takeover
 {
     /// <summary>
-    /// 一组士兵
+    /// 一组士兵，和血条是同一个预制件上的
     /// </summary>
-    public partial class Army
+    [RequireComponent(typeof(ArmyHealthBar))]
+    public partial class Army : UpdateableComponent
     {
         public string TableId { get; private set; }
 
@@ -25,11 +28,48 @@ namespace Takeover
         /// </summary>
         public List<Unit> Units { get; private set; }
 
+        public Unit MainUnit
+        {
+            get
+            {
+                for (int i = 0; i < Units.Count; i++)
+                {
+                    if (Units[i].IsActive)
+                        return Units[i];
+                }
+                return null;
+            }
+        }
+
         public ArmyHealthBar HealthBar { get; private set; }
+
+        public float HealthPercent
+        {
+            get
+            {
+                if (Units.Count == 0)
+                    return 0;
+
+                int totalMax = 0;
+                int totalCur = 0;
+                for (int i = 0; i < Units.Count; i++)
+                {
+                    var unit = Units[i];
+                    totalMax += unit.Health.MaxHealth;
+                    totalCur += unit.Health.CurHealth;
+                }
+                return totalCur * 1f / totalMax;
+            }
+        }
 
         private Fsm<Army> fsm;
 
-        public Army(string armyId, ECamp camp)
+        void Awake()
+        {
+            HealthBar = GetComponent<ArmyHealthBar>();
+        }
+
+        public void Init(string armyId, ECamp camp)
         {
             TableId = armyId;
             this.Camp = camp;
@@ -43,27 +83,27 @@ namespace Takeover
             new ArmyStates.Dead());
         }
 
-        public void OnDestroy()
+        protected override void OnDestroy()
         {
             if (CurCastle)
                 ExitCastle();
 
             foreach (var unit in Units)
                 GameObject.Destroy(unit.gameObject);
-            GameObject.Destroy(HealthBar.gameObject);
+            base.OnDestroy();
         }
 
-        // 因为这不是mono脚本，外部调用
-        public void LateUpdate()
+        public override void OnLateUpdate(float dt)
         {
-            HealthBar.UpdateHealthAndPosition(Units, InCastle);
+            HealthBar.UpdateHealthAndPosition(Units, HealthPercent, InCastle);
         }
 
         // 实例化士兵对象
         private void InitUnits()
         {
-            GameObject unitPrefab = GFGlobal.Resource.LoadAssetSync<GameObject>($"Assets/Content/Sprites/Units/Prefab/{TableId}.prefab");
             var armyData = GFGlobal.Tables.TbArmyData[TableId];
+            string assetPath = string.Format(GFGlobal.GlobalTableData.UnitPath, armyData.UnitType + Camp.ToString());
+            GameObject unitPrefab = GFGlobal.Resource.LoadAssetSync<GameObject>(assetPath);
             Units = new(armyData.Num);
             for (int i = 0; i < armyData.Num; i++)
             {
@@ -78,9 +118,8 @@ namespace Takeover
 
         private void InitHealthBar()
         {
-            GameObject healthBarPrefab = GFGlobal.Resource.LoadAssetSync<GameObject>("Assets/Content/Sprites/Army/ArmyHealthBar.prefab");
-            HealthBar = GameObject.Instantiate(healthBarPrefab, Global.LevelLogic.ArmyHealthTransform).GetComponent<ArmyHealthBar>();
-            HealthBar.SetCamp(Camp);
+            var atlas = GFGlobal.Resource.LoadAssetSync<SpriteAtlas>(GFGlobal.Tables.TbGlobalSettingData.ArmyIconPath);
+            HealthBar.Init(Camp, atlas.GetSprite(TableId));
             HealthBar.SetHealthPercent(1);
         }
 
@@ -94,6 +133,10 @@ namespace Takeover
                 ExitCastle();
 
             CurCastle = castle;
+
+            for (int i = 0; i < Units.Count; i++)
+                Units[i].OnEnterCastle(castle);
+
             castle.OnArmyEnter(this);
         }
 
@@ -102,6 +145,9 @@ namespace Takeover
         {
             if (CurCastle)
             {
+                for (int i = 0; i < Units.Count; i++)
+                    Units[i].OnExitCastle();
+
                 CurCastle.OnArmyExit(this);
                 CurCastle = null;
             }

@@ -2,6 +2,7 @@ using TableStructure;
 using GameFramework.Hot;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 namespace Takeover
 {
@@ -10,7 +11,7 @@ namespace Takeover
     /// </summary>
     [RequireComponent(typeof(UnitHealth))]
     [RequireComponent(typeof(Camp))]
-    public partial class Castle : MonoBehaviour
+    public partial class Castle : MonoBehaviour, IPointerClickHandler
     {
         public const int MAX_LEVEL = 2;
 
@@ -56,27 +57,6 @@ namespace Takeover
             Health = GetComponent<UnitHealth>();
         }
 
-        void Start()
-        {
-            campComp.OnCampChange += OnCampChange;
-            OnCampChange(Camp);
-        }
-
-        void OnMouseDown()
-        {
-            GFGlobal.UI.OpenPanel<CastleOperateControl>(userData: this);
-        }
-
-        private void OnCampChange(ECamp camp)
-        {
-            var spriteMouseEvent = GetComponentInChildren<SpriteMouseEvent>();
-            if (spriteMouseEvent)
-            {
-                spriteMouseEvent.OnMouseDownAction -= OnMouseDown;
-                spriteMouseEvent.OnMouseDownAction += OnMouseDown;
-            }
-        }
-
         public void OnArmyEnter(Army army)
         {
             if (!Defenders.Contains(army))
@@ -86,6 +66,11 @@ namespace Takeover
         public void OnArmyExit(Army army)
         {
             Defenders.Remove(army);
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            GFGlobal.UI.OpenPanel<CastleOperateControl>(userData: this);
         }
     }
 }

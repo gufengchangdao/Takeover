@@ -109,13 +109,5 @@ namespace Takeover
             if (!lockAI)
                 UpdateCpuCombotantLogic(1);
         }
-
-        void LateUpdate()
-        {
-            for (int i = 0; i < Armies.Count; i++)
-            {
-                Armies[i].LateUpdate();
-            }
-        }
     }
 }

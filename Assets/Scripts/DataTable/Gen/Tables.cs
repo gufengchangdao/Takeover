@@ -16,7 +16,7 @@ public partial class Tables
 {
     public TbGlobalSettingData TbGlobalSettingData {get; }
     /// <summary>
-    /// 单位表
+    /// 小队表
     /// </summary>
     public TbArmyData TbArmyData {get; }
     /// <summary>
@@ -31,6 +31,10 @@ public partial class Tables
     /// 城堡表
     /// </summary>
     public TbCastleData TbCastleData {get; }
+    /// <summary>
+    /// 按键输入表
+    /// </summary>
+    public TbInputData TbInputData {get; }
     /// <summary>
     /// 关卡表
     /// </summary>
@@ -48,6 +52,7 @@ public partial class Tables
         TbBuildingData = new TbBuildingData(loader("tbbuildingdata"));
         TbCampaignData = new TbCampaignData(loader("tbcampaigndata"));
         TbCastleData = new TbCastleData(loader("tbcastledata"));
+        TbInputData = new TbInputData(loader("tbinputdata"));
         TbLevelData = new TbLevelData(loader("tbleveldata"));
         TbMultiLanguageText = new TbMultiLanguageText(loader("tbmultilanguagetext"));
         TbPanelData = new TbPanelData(loader("tbpaneldata"));
@@ -61,6 +66,7 @@ public partial class Tables
         TbBuildingData.ResolveRef(this);
         TbCampaignData.ResolveRef(this);
         TbCastleData.ResolveRef(this);
+        TbInputData.ResolveRef(this);
         TbLevelData.ResolveRef(this);
         TbMultiLanguageText.ResolveRef(this);
         TbPanelData.ResolveRef(this);

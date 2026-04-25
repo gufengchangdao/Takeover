@@ -34,12 +34,20 @@ namespace GameFramework.AOT
             for (int i = 0; i < updateableObjects.Count; i++)
                 updateableObjects[i].OnUpdate(dt);
         }
+
+        void LateUpdate()
+        {
+            float dt = Time.deltaTime;
+            for (int i = 0; i < updateableObjects.Count; i++)
+                updateableObjects[i].OnLateUpdate(dt);
+        }
     }
 
 
     public interface IUpdateable
     {
         void OnUpdate(float dt);
+        void OnLateUpdate(float dt);
     }
 
     public abstract class UpdateableComponent : MonoBehaviour, IUpdateable
@@ -50,6 +58,8 @@ namespace GameFramework.AOT
         }
 
         public virtual void OnUpdate(float dt) { }
+
+        public virtual void OnLateUpdate(float dt) { }
 
         protected virtual void OnDestroy()
         {
