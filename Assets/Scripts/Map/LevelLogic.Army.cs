@@ -1,3 +1,4 @@
+using GameFramework.Hot;
 using TableStructure;
 using UnityEngine;
 
@@ -7,11 +8,12 @@ namespace Takeover
     {
         public Army CreateArmy(ECamp camp, string armyId)
         {
-            // Army army = new(armyId, camp);
-            // Armies.Add(army);
-            // UpdateResSpeed(camp);
-            // return army;
-            return null;
+            var go = GFGlobal.Resource.InstantiatePrefab(GFGlobal.GlobalTableData.ArmyPrefabPath, ArmyTransform);
+            Army army = go.GFGetOrAddComponent<Army>();
+            army.Init(armyId, camp);
+            Armies.Add(army);
+            UpdateResSpeed(camp);
+            return army;
         }
 
         public void RemoveArmy(Army army)

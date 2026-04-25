@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using GameFramework.Hot;
 using UnityEngine;
 
 namespace Takeover
@@ -14,8 +13,14 @@ namespace Takeover
 
         void Awake()
         {
-            foreach (Transform child in transform)
-                child.gameObject.SetActive(false);
+            foreach (var nodeData in nodeDatas)
+            {
+                if (nodeData.node.parent == transform)
+                {
+                    nodeData.node.gameObject.SetActive(false);
+                    nodeData.isPathNode = true;
+                }
+            }
 
             gameObject.GFGetOrAddComponent<UnitController>();
         }
@@ -44,14 +49,10 @@ namespace Takeover
         }
 
 
-        private HashSet<int> findPathVisited = new();
-        private Dictionary<int, float> findPathNodeDistances = new();
-        private Queue<int> findPathQueue = new();
-        private Dictionary<int, int> findPathNodePaths = new();
         private List<int> findPathNodeList = new();
 
         // 计算从给定位置到指定位置经过的节点列表
-        public List<int> UpdatePathNodeList(Vector2 curPos, Vector2 targetPos)
+        private List<int> UpdatePathNodeList(Vector2 curPos, Vector2 targetPos)
         {
             int beginNodeIndex = GetClosestNodeIndex(curPos);
             int endNodeIndex = GetClosestNodeIndex(targetPos);
@@ -79,58 +80,88 @@ namespace Takeover
         private List<int> UpdatePathNodeList(int beginNodeIndex, int endNodeIndex)
         {
             findPathNodeList.Clear();
-            findPathVisited.Clear();
-            findPathNodeDistances.Clear();
-            findPathNodePaths.Clear();
-            findPathQueue.Clear();
+
+            int n = nodeDatas.Length;
+            if (n == 0 || beginNodeIndex < 0 || endNodeIndex < 0 || beginNodeIndex >= n || endNodeIndex >= n)
+                return findPathNodeList;
 
             if (beginNodeIndex == endNodeIndex)
                 return findPathNodeList;
 
-            findPathQueue.Enqueue(beginNodeIndex);
-            findPathVisited.Add(beginNodeIndex);
+            float[] dist = new float[n];
+            int[] prev = new int[n];
+            bool[] done = new bool[n];
 
-            for (int i = 0; i < nodeDatas.Length; i++)
+            for (int i = 0; i < n; i++)
             {
-                if (i == beginNodeIndex)
-                    findPathNodeDistances[i] = 0;
-                else
-                    findPathNodeDistances[i] = float.MaxValue;
+                dist[i] = float.MaxValue;
+                prev[i] = -1;
             }
+            dist[beginNodeIndex] = 0f;
 
-            while (findPathQueue.Count > 0)
+            for (int step = 0; step < n; step++)
             {
-                int curIndex = findPathQueue.Dequeue();
-                float curDistance = findPathNodeDistances[curIndex];
-                Vector2 pos = nodeDatas[curIndex].node.position;
-                var adjoinNodes = nodeDatas[curIndex].adjoinNodes;
+                // 1) 选出当前未确定且 dist 最小的节点 u
+                int u = -1;
+                float best = float.MaxValue;
+                for (int i = 0; i < n; i++)
+                {
+                    if (!done[i] && dist[i] < best)
+                    {
+                        best = dist[i];
+                        u = i;
+                    }
+                }
+
+                // 剩下节点都不可达
+                if (u == -1)
+                    break;
+
+                // 提前结束
+                if (u == endNodeIndex)
+                    break;
+
+                done[u] = true;
+
+                Vector2 uPos = nodeDatas[u].node.position;
+                var adjoinNodes = nodeDatas[u].adjoinNodes;
+
+                // 2) 松弛相邻边
                 for (int i = 0; i < adjoinNodes.Count; i++)
                 {
-                    int adjoinNodeIndex = adjoinNodes[i];
-                    if (findPathVisited.Contains(adjoinNodeIndex))
-                        continue;
+                    int v = adjoinNodes[i];
+                    if (v < 0 || v >= n || done[v]) continue;
 
-                    float distance = curDistance + Vector2.Distance(pos, nodeDatas[adjoinNodeIndex].node.position);
-                    if (distance < findPathNodeDistances[adjoinNodeIndex])
+                    float alt = dist[u] + Vector2.Distance(uPos, nodeDatas[v].node.position);
+                    if (alt < dist[v])
                     {
-                        findPathNodeDistances[adjoinNodeIndex] = distance; //更新最短距离
-                        findPathNodePaths[adjoinNodeIndex] = curIndex; //更新路径
+                        dist[v] = alt;
+                        prev[v] = u;
                     }
-
-                    findPathQueue.Enqueue(adjoinNodeIndex);
-                    findPathVisited.Add(adjoinNodeIndex);
                 }
             }
 
-            int targetNodeIndex = endNodeIndex;
-            while (targetNodeIndex != beginNodeIndex)
-            {
-                findPathNodeList.Add(targetNodeIndex);
-                targetNodeIndex = findPathNodePaths[targetNodeIndex];
-            }
-            findPathNodeList.Add(beginNodeIndex);
-            findPathNodeList.Reverse();
+            // 3) 不可达保护
+            if (prev[endNodeIndex] == -1)
+                return findPathNodeList;
 
+            // 4) 回溯路径
+            int cur = endNodeIndex;
+            while (cur != -1)
+            {
+                findPathNodeList.Add(cur);
+                if (cur == beginNodeIndex) break;
+                cur = prev[cur];
+            }
+
+            // 正常情况下应回到起点；否则视为失败
+            if (findPathNodeList[findPathNodeList.Count - 1] != beginNodeIndex)
+            {
+                findPathNodeList.Clear();
+                return findPathNodeList;
+            }
+
+            findPathNodeList.Reverse();
             return findPathNodeList;
         }
 
@@ -142,17 +173,13 @@ namespace Takeover
         {
             HideAllPathNode();
 
-
-
-
-            // // 显示经过的节点
-            // int targetNodeIndex = findPathTargetNodeIndex;
-            // while (targetNodeIndex != findPathStartNodeIndex)
-            // {
-            //     nodeDatas[targetNodeIndex].node.gameObject.SetActive(true);
-            //     targetNodeIndex = findPathNodePaths[targetNodeIndex];
-            // }
-            // nodeDatas[findPathStartNodeIndex].node.gameObject.SetActive(true);
+            var list = UpdatePathNodeList(curPos, targetPos);
+            foreach (var nodeIndex in list)
+            {
+                var node = nodeDatas[nodeIndex];
+                if (node.isPathNode)
+                    node.node.gameObject.SetActive(true);   // 显示经过的节点
+            }
         }
 
         public int GetClosestNodeIndex(Vector2 pos)

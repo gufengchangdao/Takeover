@@ -1,5 +1,6 @@
 using System;
 using GameFramework.AOT;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 
@@ -14,17 +15,18 @@ namespace GameFramework.Hot
 
         void Awake()
         {
-            FindAnyObjectByType<InputSystemUIInputModule>().transform.SetParent(transform);
+            var inputModule = FindAnyObjectByType<InputSystemUIInputModule>();
+            inputModule.transform.SetParent(transform);
 
             var playerInput = gameObject.AddComponent<PlayerInput>();
             playerInput.notificationBehavior = PlayerNotifications.InvokeUnityEvents;
 
-            // asset = ScriptableObject.CreateInstance<InputActionAsset>();
-            asset = GFGlobal.Resource.LoadAssetSync<InputActionAsset>(GFGlobal.Config.inputActionAssetPath, false);
+            // asset = GFGlobal.Resource.LoadAssetSync<InputActionAsset>(GFGlobal.Config.inputActionAssetPath, false);
+            asset = inputModule.actionsAsset; //直接在默认asset上添加按键
+            asset.Disable();
+            AddInputActions();
             asset.Enable();
             playerInput.actions = asset;
-
-            AddInputActions();
         }
 
         private void AddInputActions()

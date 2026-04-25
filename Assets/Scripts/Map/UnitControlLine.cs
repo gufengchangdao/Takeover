@@ -13,7 +13,6 @@ namespace Takeover
 
         void Awake()
         {
-            DontDestroyOnLoad(gameObject);
             lineRenderer = GetComponent<LineRenderer>();
         }
 

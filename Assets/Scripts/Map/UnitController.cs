@@ -23,7 +23,6 @@ namespace Takeover
                 var go = GFGlobal.Resource.InstantiatePrefab(GFGlobal.GlobalTableData.UnitLineParefabPath);
                 unitControlLine = go.GetComponent<UnitControlLine>();
             }
-
             GFGlobal.Input.RegisterAction("Player", InputEnum.UnitControl, StartUnitControl, null, StopUnitControl);
             GFGlobal.Input.RegisterAction("Player", InputEnum.CancelControl, CancelUnitControl, null, null);
         }

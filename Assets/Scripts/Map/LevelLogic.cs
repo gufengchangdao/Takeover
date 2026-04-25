@@ -45,14 +45,14 @@ namespace Takeover
             }
         }
 
-        private Transform _armyHealthTransform;
-        public Transform ArmyHealthTransform
+        private Transform _armyTransform;
+        public Transform ArmyTransform
         {
             get
             {
-                if (!_armyHealthTransform)
-                    _armyHealthTransform = new GameObject("ArmyHealth").transform;
-                return _armyHealthTransform;
+                if (!_armyTransform)
+                    _armyTransform = new GameObject("Armies").transform;
+                return _armyTransform;
             }
         }
 

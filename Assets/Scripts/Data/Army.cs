@@ -86,10 +86,15 @@ namespace Takeover
         protected override void OnDestroy()
         {
             if (CurCastle)
-                ExitCastle();
+            {
+                CurCastle.OnArmyExit(this);
+                CurCastle = null;
+            }
 
             foreach (var unit in Units)
-                GameObject.Destroy(unit.gameObject);
+                if (unit)
+                    GameObject.Destroy(unit.gameObject);
+            Units.Clear();
             base.OnDestroy();
         }
 
