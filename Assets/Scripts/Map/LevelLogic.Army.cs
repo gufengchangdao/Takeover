@@ -42,7 +42,7 @@ namespace Takeover
 
             Combotants[camp].OnBuyArmy(armyId);
             var army = CreateArmy(camp, armyId);
-            army.EnterCastle(castle);
+            army.EnterCastle(castle, true);
             return true;
         }
     }

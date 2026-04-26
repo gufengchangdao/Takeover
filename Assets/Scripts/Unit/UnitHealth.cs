@@ -14,9 +14,16 @@ namespace Takeover
             }
             set
             {
-                m_CurHealth = Mathf.Max(value, 0);
-                if (m_CurHealth <= 0)
-                    OnDeath?.InvokeSafe();
+                value = Mathf.Max(value, 0);
+                if (m_CurHealth != value)
+                {
+                    int oldHealth = m_CurHealth;
+                    m_CurHealth = value;
+                    OnHealthChange?.Invoke(value, oldHealth);
+                    if (m_CurHealth <= 0)
+                        OnDeath?.InvokeSafe();
+                }
+
             }
         }
 
@@ -39,6 +46,7 @@ namespace Takeover
         public bool IsDead => CurHealth <= 0;
 
         public event Action OnDeath;
+        public event Action<int, int> OnHealthChange;
 
         void Awake()
         {
@@ -48,6 +56,7 @@ namespace Takeover
         void OnDestroy()
         {
             OnDeath = null;
+            OnHealthChange = null;
         }
     }
 }

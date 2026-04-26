@@ -1,3 +1,4 @@
+using System;
 using GameFramework.AOT;
 using UnityEngine;
 
@@ -47,7 +48,28 @@ namespace Takeover
         /// <summary>
         /// 是否到达目标位置
         /// </summary>
-        public bool AtTarget { get; private set; }
+        public bool _atTarget;
+        public bool AtTarget
+        {
+            get
+            {
+                return _atTarget;
+            }
+            set
+            {
+                if (_atTarget != value)
+                {
+                    _atTarget = value;
+                    if (value)
+                        OnArriveTarget?.Invoke(this);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 到达目标位置后
+        /// </summary>
+        public event Action<Unit> OnArriveTarget;
 
         public float Speed { get; private set; }
 
@@ -71,7 +93,7 @@ namespace Takeover
         private void UpdateAnimDir(float dx, float dy)
         {
             if (!Mathf.Approximately(dy, 0))
-                animator.SetFloat(ANIM_PARAMS_IS_UP, dy > 0 ? 1 : 0);
+                Animator.SetFloat(ANIM_PARAMS_IS_UP, dy > 0 ? 1 : 0);
         }
 
         private void ApplyMoveImpulse()

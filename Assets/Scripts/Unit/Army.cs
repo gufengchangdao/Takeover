@@ -65,7 +65,7 @@ namespace Takeover
 
         public bool WantToMove => CurPathList != null && CurPathList.Count > 0;
 
-        private CooldownTimer behaviorCD = new(1);
+        private CooldownTimer behaviorCD = new(0.5f);
 
         private Fsm<Army> fsm;
 
@@ -85,6 +85,7 @@ namespace Takeover
             fsm = GFGlobal.Fsm.CreateFsm(this,
             new ArmyStates.Idle(),
             new ArmyStates.Move(),
+            new ArmyStates.AtFort(),
             new ArmyStates.Attack());
 
             fsm.ChangeState<ArmyStates.Idle>();
@@ -112,7 +113,7 @@ namespace Takeover
         {
             base.OnUpdate(dt);
 
-            if (behaviorCD.IsReady(true))
+            if (behaviorCD.IsReady())
                 BehaviorUpdate(behaviorCD.Interval);
 
         }
@@ -120,15 +121,37 @@ namespace Takeover
         // 更新行为，充当一个简单的行为树吧
         private void BehaviorUpdate(float dt)
         {
-            if (!InCombat && WantToMove && !fsm.InState<ArmyStates.Move>())
+            if (InCombat)
             {
-                fsm.ChangeState<ArmyStates.Move>();
+
+            }
+            else
+            {
+                if (WantToMove)
+                {
+                    fsm.ChangeState<ArmyStates.Move>();
+                    return;
+                }
+
+                if (!WantToMove)
+                {
+                    if (InCastle)
+                    {
+                        fsm.ChangeState<ArmyStates.AtFort>();
+                        return;
+                    }
+                    else
+                    {
+                        fsm.ChangeState<ArmyStates.Idle>();
+                        return;
+                    }
+                }
             }
         }
 
         public override void OnLateUpdate(float dt)
         {
-            HealthBar.UpdateHealthAndPosition(Units, HealthPercent, InCastle);
+            HealthBar.UpdateHealthAndPosition(Units, HealthPercent, CurCastle);
         }
 
         public Unit GetMainUnit()
@@ -156,8 +179,16 @@ namespace Takeover
                 var unit = go.GFGetOrAddComponent<Unit>();
                 float speed = armyData.Speed / 100; //跑的太快了，给个统一缩放比例
                 unit.Init(armyData.Health, speed);
-
+                unit.OnArriveTarget += OnUnitArriveTarget;
                 Units.Add(unit);
+            }
+        }
+
+        private void OnUnitArriveTarget(Unit unit)
+        {
+            if (InCastle) //如果主单位已经进城堡了，那当前位置一定是最后的城堡节点
+            {
+                unit.OnEnterCastle(CurCastle);
             }
         }
 
@@ -169,7 +200,7 @@ namespace Takeover
         }
 
         // 进入城堡
-        public void EnterCastle(Castle castle)
+        public void EnterCastle(Castle castle, bool setAllUnitPos = false)
         {
             if (CurCastle == castle)
                 return;
@@ -179,8 +210,9 @@ namespace Takeover
 
             CurCastle = castle;
 
-            for (int i = 0; i < Units.Count; i++)
-                Units[i].OnEnterCastle(castle);
+            if (setAllUnitPos)
+                for (int i = 0; i < Units.Count; i++)
+                    Units[i].OnEnterCastle(castle);
 
             castle.OnArmyEnter(this);
         }

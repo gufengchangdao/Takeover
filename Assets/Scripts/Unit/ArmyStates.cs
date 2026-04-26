@@ -34,5 +34,10 @@ namespace Takeover
         {
 
         }
+
+        public class AtFort : FsmState<Army>
+        {
+
+        }
     }
 }

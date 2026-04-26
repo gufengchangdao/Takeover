@@ -7,7 +7,7 @@ namespace Takeover
     public class ArmyHealthBar : MonoBehaviour
     {
         public const float HEALTH_BAR_HEIGHT = 1;
-        public const float HEALTH_BAR_CASTLE_HEIGHT = HEALTH_BAR_HEIGHT + 0.2f;
+        public const float HEALTH_BAR_CASTLE_HEIGHT = HEALTH_BAR_HEIGHT + 0.4f;
 
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private Camp camp;
@@ -29,7 +29,7 @@ namespace Takeover
         private float lastHealthPercent = -1;
 
         // 更新血量和位置
-        public void UpdateHealthAndPosition(List<Unit> units, float healthPercent, bool inCastle)
+        public void UpdateHealthAndPosition(List<Unit> units, float healthPercent, Castle castle)
         {
             if (!Mathf.Approximately(lastHealthPercent, healthPercent))
             {
@@ -37,21 +37,29 @@ namespace Takeover
                 SetHealthPercent(1 - healthPercent);
             }
 
-            float height = inCastle ? HEALTH_BAR_CASTLE_HEIGHT : HEALTH_BAR_HEIGHT;
-            float x = 0, y = 0;
-            int count = 0;
-            for (int i = 0; i < units.Count; i++)
+            if (castle)
             {
-                var unit = units[i];
-                if (!unit.Health.IsDead)
-                {
-                    var pos = unit.Health.transform.position;
-                    x += pos.x;
-                    y += pos.y;
-                    count++;
-                }
+                var pos = castle.transform.position;
+                transform.position = new Vector2(pos.x, pos.y + HEALTH_BAR_CASTLE_HEIGHT);
             }
-            transform.position = new Vector2(x / count, y / count + height);
+            else
+            {
+                float x = 0, y = 0;
+                int count = 0;
+                for (int i = 0; i < units.Count; i++)
+                {
+                    var unit = units[i];
+                    if (!unit.Health.IsDead)
+                    {
+                        var pos = unit.Health.transform.position;
+                        x += pos.x;
+                        y += pos.y;
+                        count++;
+                    }
+                }
+                transform.position = new Vector2(x / count, y / count + HEALTH_BAR_HEIGHT);
+            }
+
         }
     }
 }

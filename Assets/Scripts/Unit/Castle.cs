@@ -31,7 +31,7 @@ namespace Takeover
         /// <summary>
         /// 城堡当前等级
         /// </summary>
-        public int Level { get; private set; }
+        public BindableProperty<int> Level = new();
 
         /// <summary>
         /// 升到下一级所需金币
@@ -40,7 +40,7 @@ namespace Takeover
         {
             get
             {
-                return Level switch
+                return Level.Value switch
                 {
                     0 => 350,
                     1 => 500,

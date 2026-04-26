@@ -25,6 +25,17 @@ namespace Takeover
             gameObject.GFGetOrAddComponent<ArmyController>();
         }
 
+
+        /// <summary>
+        /// 如果这个节点是城堡的话返回城堡组件
+        /// </summary>
+        public Castle GetCastleByNodeIndex(int nodeIndex)
+        {
+            if (!nodeDatas[nodeIndex].isPathNode)
+                return nodeDatas[nodeIndex].node.GetComponent<Castle>();
+            return null;
+        }
+
         public Vector2 GetNodePosition(int nodeIndex)
         {
             return nodeDatas[nodeIndex].node.position;

@@ -123,7 +123,7 @@ namespace GameFramework.Hot
         /// 切换当前有限状态机状态。
         /// </summary>
         /// <param name="stateType">要切换到的有限状态机状态类型。</param>
-        public void ChangeState(Type stateType, object userData = null)
+        public void ChangeState(Type stateType, object userData = null, bool forceReenter = false)
         {
             FsmState<T> state = GetState(stateType);
             if (state == null)
@@ -131,6 +131,9 @@ namespace GameFramework.Hot
                 Log.Error("[FSM] FSM '{0}.{1}' can not start state '{2}' which is not exist.", typeof(T), Name, stateType.FullName);
                 return;
             }
+
+            if (CurrentState != null && CurrentState.GetType() == stateType && !forceReenter)
+                return; //已经在这个状态了
 
             // Type oldStateType = CurrentState.GetType();
             CurrentState?.OnLeave();
@@ -145,9 +148,9 @@ namespace GameFramework.Hot
             ClearData();
         }
 
-        public void ChangeState<S>(object userData = null)
+        public void ChangeState<S>(object userData = null, bool forceReenter = false)
         {
-            ChangeState(typeof(S), userData);
+            ChangeState(typeof(S), userData, forceReenter);
         }
 
         public S GetState<S>() where S : FsmState<T>

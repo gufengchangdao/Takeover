@@ -56,7 +56,7 @@ namespace Takeover
             //     selectCastle = null;
 
             // 计算并显示路径节点
-            if (pathCalculationCD.IsReady(true))
+            if (pathCalculationCD.IsReady())
                 Global.MapPath.UpdatePathNodeVisible(selectArmy.MainUnitPosition, mouseWorldPos);
         }
 

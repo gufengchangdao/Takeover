@@ -1,7 +1,6 @@
 using GameFramework.AOT;
 using GameFramework.Hot;
 using UnityEngine;
-using UnityEngine.InputSystem.Controls;
 
 namespace Takeover
 {
@@ -85,10 +84,23 @@ namespace Takeover
                 {
                     Log.Debug($"单位{TableId}到达节点{CurPathList[CurPathList.Count - 1]}，开始下一个节点");
                     CurPathList.RemoveAt(CurPathList.Count - 1); //到了才会移除
+
+                    //到最后一个节点了
+                    if (CurPathList.Count == 0)
+                    {
+                        var castle = Global.MapPath.GetCastleByNodeIndex(nodeIndex);
+                        if (castle)
+                        {
+                            //主单位进城堡
+                            EnterCastle(castle);
+                            mainUnit.OnEnterCastle(castle);
+                        }
+                    }
                 }
                 else
                 {
                     // 给所有单位分配坐标
+                    bool isEndCaster = CurPathList.Count == 1 && Global.MapPath.GetCastleByNodeIndex(CurPathList[0]) != null;
                     var dPos = targetPos - mainUnit.Position;
                     var curAngl = mainUnit.TargetAngle;
                     if (!(dPos.x == 0 && dPos.y == 0))
@@ -99,7 +111,10 @@ namespace Takeover
                         var unit = Units[i];
                         if (!unit.IsDead)
                         {
-                            unit.TargetPos = GetOtherUnitTargetPosition(targetPos, k, curAngl);
+                            if (isEndCaster)
+                                unit.TargetPos = targetPos; //直接移动到城堡位置
+                            else
+                                unit.TargetPos = GetOtherUnitTargetPosition(targetPos, k, curAngl);
                             unit.ResetImpulse();
                             k++;
                         }

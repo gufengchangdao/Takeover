@@ -1,3 +1,4 @@
+using System;
 using GameFramework.AOT;
 using GameFramework.Hot;
 using UnityEngine;
@@ -14,15 +15,15 @@ namespace Takeover
 
         public bool IsDead => Health.IsDead;
 
-        private Animator animator;
+        public Animator Animator { get; private set; }
         private Fsm<Unit> fsm;
 
-        private CooldownTimer behaviorCD = new(1);
+        private CooldownTimer behaviorCD = new(0.5f);
 
         void Awake()
         {
             Health = GetComponent<UnitHealth>();
-            animator = GetComponent<Animator>();
+            Animator = GetComponent<Animator>();
         }
 
         protected override void Start()
@@ -39,6 +40,7 @@ namespace Takeover
         {
             if (fsm != null)
                 GFGlobal.Fsm.DestroyFsm(fsm);
+            OnArriveTarget = null;
             base.OnDestroy();
         }
 
@@ -64,7 +66,7 @@ namespace Takeover
 
         public override void OnUpdate(float dt)
         {
-            if (behaviorCD.IsReady(true) && !IsDead)
+            if (behaviorCD.IsReady() && !IsDead)
                 BehaviorUpdate(behaviorCD.Interval);
 
             if (!IsDead)
@@ -87,6 +89,12 @@ namespace Takeover
                 fsm.ChangeState<UnitStates.Idle>();
                 return;
             }
+        }
+
+        public void PlayAnimation(string anim)
+        {
+            if (!gameObject.activeInHierarchy) return; //不判断一下会警告
+            Animator.Play(anim);
         }
     }
 }
