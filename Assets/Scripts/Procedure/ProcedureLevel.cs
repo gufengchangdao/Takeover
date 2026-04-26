@@ -21,11 +21,9 @@ namespace Takeover
         protected override void OnLeave()
         {
             GFGlobal.Event.Unsubscribe<SceneLoadEndEvent>(OnSceneLoaded);
-
             GFGlobal.UI.ClosePanel<LevelControl>();
-
+            GFGlobal.Scene.LoadScene("Empty");
             Global.OnExitLevel();
-
             base.OnLeave();
         }
 

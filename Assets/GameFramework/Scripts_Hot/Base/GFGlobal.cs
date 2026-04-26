@@ -19,6 +19,7 @@ namespace GameFramework.Hot
         public static TableStructure.TbGlobalSettingData GlobalTableData => Tables.TbGlobalSettingData;
 #endif
         public static GFInput Input { get; private set; }
+        public static GFFsm Fsm { get; private set; }
         public static GFProcedure Procedure { get; private set; }
         public static GFUI UI { get; private set; }
         public static Camera UICamera => UI.UICamera;
@@ -63,6 +64,7 @@ namespace GameFramework.Hot
             Resource.ModuleUpdate();
             DataTable.ModuleUpdate();
             Input.ModuleUpdate();
+            Fsm.ModuleUpdate();
             Procedure.ModuleUpdate();
             UI.ModuleUpdate();
             Sound.ModuleUpdate();
@@ -79,6 +81,7 @@ namespace GameFramework.Hot
             Resource = AddModuleComponent<GFResource>("Resource");
             DataTable = AddModuleComponent<GFDataTable>("DataTable");
             Input = AddModuleComponent<GFInput>("Input");
+            Fsm = AddModuleComponent<GFFsm>("Fsm");
             Procedure = AddModuleComponent<GFProcedure>("Procedure");
             UI = AddModuleComponent<GFUI>("UI");
             Sound = AddModuleComponent<GFSound>("Sound");

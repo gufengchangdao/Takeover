@@ -37,7 +37,10 @@ namespace Takeover
         {
             Castle target = SeekNearestEnemyKeyNode(castle);
             if (target)
-                army.CommandGotoTarget(target);
+            {
+                int nodexIndex = Global.MapPath.GetNodeIndex(target.transform);
+                army.CommandGotoTarget(nodexIndex);
+            }
         }
 
         // 给指定城堡查找派兵目标，不同阵营或者是已经被摧毁了的城堡

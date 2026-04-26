@@ -26,18 +26,18 @@ namespace Takeover
         /// <summary>
         /// 所有单位
         /// </summary>
-        public List<Unit> Units { get; private set; }
+        public List<Unit> Units { get; private set; } = new();
 
-        public Unit MainUnit
+        public int UnitCount => Units.Count;
+
+        public Vector2 MainUnitPosition
         {
             get
             {
-                for (int i = 0; i < Units.Count; i++)
-                {
-                    if (Units[i].IsActive)
-                        return Units[i];
-                }
-                return null;
+                var unit = GetMainUnit();
+                if (!unit)
+                    return default;
+                return unit.transform.position;
             }
         }
 
@@ -47,9 +47,6 @@ namespace Takeover
         {
             get
             {
-                if (Units.Count == 0)
-                    return 0;
-
                 int totalMax = 0;
                 int totalCur = 0;
                 for (int i = 0; i < Units.Count; i++)
@@ -58,9 +55,17 @@ namespace Takeover
                     totalMax += unit.Health.MaxHealth;
                     totalCur += unit.Health.CurHealth;
                 }
+                if (totalMax == 0) return 0;
+
                 return totalCur * 1f / totalMax;
             }
         }
+
+        public List<int> CurPathList { get; private set; }
+
+        public bool WantToMove => CurPathList != null && CurPathList.Count > 0;
+
+        private CooldownTimer behaviorCD = new(1);
 
         private Fsm<Army> fsm;
 
@@ -74,13 +79,15 @@ namespace Takeover
             TableId = armyId;
             this.Camp = camp;
             InitUnits();
+            InitFormation();
             InitHealthBar();
 
-            fsm = Fsm<Army>.Create("Army", this,
+            fsm = GFGlobal.Fsm.CreateFsm(this,
             new ArmyStates.Idle(),
             new ArmyStates.Move(),
-            new ArmyStates.Attack(),
-            new ArmyStates.Dead());
+            new ArmyStates.Attack());
+
+            fsm.ChangeState<ArmyStates.Idle>();
         }
 
         protected override void OnDestroy()
@@ -91,6 +98,9 @@ namespace Takeover
                 CurCastle = null;
             }
 
+            GFGlobal.Fsm.DestroyFsm(fsm);
+            fsm = null;
+
             foreach (var unit in Units)
                 if (unit)
                     GameObject.Destroy(unit.gameObject);
@@ -98,9 +108,39 @@ namespace Takeover
             base.OnDestroy();
         }
 
+        public override void OnUpdate(float dt)
+        {
+            base.OnUpdate(dt);
+
+            if (behaviorCD.IsReady(true))
+                BehaviorUpdate(behaviorCD.Interval);
+
+        }
+
+        // 更新行为，充当一个简单的行为树吧
+        private void BehaviorUpdate(float dt)
+        {
+            if (!InCombat && WantToMove && !fsm.InState<ArmyStates.Move>())
+            {
+                fsm.ChangeState<ArmyStates.Move>();
+            }
+        }
+
         public override void OnLateUpdate(float dt)
         {
             HealthBar.UpdateHealthAndPosition(Units, HealthPercent, InCastle);
+        }
+
+        public Unit GetMainUnit()
+        {
+            if (Units.Count == 0) return null;
+
+            for (int i = 0; i < Units.Count; i++)
+            {
+                if (!Units[i].IsDead)
+                    return Units[i];
+            }
+            return Units[0]; //都死了
         }
 
         // 实例化士兵对象
@@ -109,13 +149,13 @@ namespace Takeover
             var armyData = GFGlobal.Tables.TbArmyData[TableId];
             string assetPath = string.Format(GFGlobal.GlobalTableData.UnitPath, armyData.UnitType + Camp.ToString());
             GameObject unitPrefab = GFGlobal.Resource.LoadAssetSync<GameObject>(assetPath);
-            Units = new(armyData.Num);
+            Units.Capacity = armyData.Num;
             for (int i = 0; i < armyData.Num; i++)
             {
                 var go = GameObject.Instantiate(unitPrefab, Global.LevelLogic.UnitTransform);
                 var unit = go.GFGetOrAddComponent<Unit>();
-                // 初始化单位
-                unit.Init(armyData.Health);
+                float speed = armyData.Speed / 100; //跑的太快了，给个统一缩放比例
+                unit.Init(armyData.Health, speed);
 
                 Units.Add(unit);
             }
@@ -161,9 +201,18 @@ namespace Takeover
         /// <summary>
         /// 让士兵前往该目标
         /// </summary>
-        public void CommandGotoTarget(Castle castle)
+        public void CommandGotoTarget(int targetNodeIndex)
         {
+            if (InCastle)
+            {
+                if (Global.MapPath.GetNodeIndex(CurCastle) == targetNodeIndex)
+                    return;
 
+                ExitCastle();
+            }
+
+            CurPathList = Global.MapPath.GetPathNodeList(MainUnitPosition, Global.MapPath.GetNodePosition(targetNodeIndex));
+            behaviorCD.SetDone(); //立即更新行为
         }
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using GameFramework.AOT;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 
@@ -12,21 +11,32 @@ namespace GameFramework.Hot
     public class GFInput : GFBaseModule
     {
         private InputActionAsset asset;
-
+        private InputActionAsset sourceAsset;
+        private InputSystemUIInputModule inputModule;
         void Awake()
         {
-            var inputModule = FindAnyObjectByType<InputSystemUIInputModule>();
+            inputModule = FindAnyObjectByType<InputSystemUIInputModule>();
             inputModule.transform.SetParent(transform);
 
             var playerInput = gameObject.AddComponent<PlayerInput>();
             playerInput.notificationBehavior = PlayerNotifications.InvokeUnityEvents;
 
             // asset = GFGlobal.Resource.LoadAssetSync<InputActionAsset>(GFGlobal.Config.inputActionAssetPath, false);
-            asset = inputModule.actionsAsset; //直接在默认asset上添加按键
+
+            sourceAsset = inputModule.actionsAsset;      // 永远保存原始引用
+            asset = Instantiate(sourceAsset);     // 只从原始引用克隆
+
             asset.Disable();
             AddInputActions();
             asset.Enable();
             playerInput.actions = asset;
+            inputModule.actionsAsset = asset;
+        }
+
+        void OnDestroy()
+        {
+            if (inputModule != null) inputModule.actionsAsset = sourceAsset; // 还原
+            if (asset != null) Destroy(asset);
         }
 
         private void AddInputActions()

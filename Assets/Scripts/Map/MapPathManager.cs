@@ -22,25 +22,53 @@ namespace Takeover
                 }
             }
 
-            gameObject.GFGetOrAddComponent<UnitController>();
+            gameObject.GFGetOrAddComponent<ArmyController>();
         }
 
-        public Transform GeInRangeUnit(Vector2 pos)
+        public Vector2 GetNodePosition(int nodeIndex)
         {
-            // 城堡
-            var hit = Physics2D.OverlapPoint(pos);
-            if (hit != null && hit.CompareTag(GameObjectTag.Castle))
-                return hit.gameObject.transform;
+            return nodeDatas[nodeIndex].node.position;
+        }
 
+        public int GetNodeIndex(Castle castle)
+        {
+            return GetNodeIndex(castle.transform);
+        }
+
+        public int GetNodeIndex(Transform transform)
+        {
+            for (int i = 0; i < nodeDatas.Length; i++)
+            {
+                if (nodeDatas[i].node == transform)
+                    return i;
+            }
+            return -1;
+        }
+
+        public int GetMouseRangeNodeIndex(Vector2 pos)
+        {
             // 路径点
             int nodeIndex = GetInRangeNodeIndex(pos);
             if (nodeIndex >= 0)
-                return nodeDatas[nodeIndex].node;
+                return nodeIndex;
 
-            return null;
+            // 城堡
+            var hit = Physics2D.OverlapPoint(pos);
+            if (hit != null && hit.CompareTag(GameObjectTag.Castle))
+                return GetNodeIndex(hit.gameObject.transform);
+
+            return -1;
         }
 
-        private int GetInRangeNodeIndex(Vector2 pos)
+        public Transform GeInRangeNodeTransform(Vector2 pos)
+        {
+            int nodeIndex = GetInRangeNodeIndex(pos);
+            if (nodeIndex == -1)
+                return null;
+            return nodeDatas[nodeIndex].node;
+        }
+
+        public int GetInRangeNodeIndex(Vector2 pos)
         {
             for (int i = 0; i < nodeDatas.Length; i++)
                 if (Vector2.Distance(pos, nodeDatas[i].node.position) < nodeTriggerRange)
@@ -48,6 +76,21 @@ namespace Takeover
             return -1;
         }
 
+        public int GetClosestNodeIndex(Vector2 pos)
+        {
+            int closestIndex = -1;
+            float closestDistance = float.MaxValue;
+            for (int i = 0; i < nodeDatas.Length; i++)
+            {
+                float distance = Vector2.Distance(pos, nodeDatas[i].node.position);
+                if (distance < closestDistance)
+                {
+                    closestIndex = i;
+                    closestDistance = distance;
+                }
+            }
+            return closestIndex;
+        }
 
         private List<int> findPathNodeList = new();
 
@@ -58,20 +101,13 @@ namespace Takeover
             int endNodeIndex = GetClosestNodeIndex(targetPos);
             var list = UpdatePathNodeList(beginNodeIndex, endNodeIndex);
 
+            // 检查第一个节点是不是最优的，有没有往回走
             if (list.Count >= 2)
             {
                 var pos0 = nodeDatas[list[0]].node.position;
                 var pos1 = nodeDatas[list[1]].node.position;
                 if (Vector3.Distance(curPos, pos1) < Vector3.Distance(pos0, pos1))
                     list.RemoveAt(0);
-            }
-
-            if (list.Count >= 2)
-            {
-                var pos0 = nodeDatas[list[list.Count - 1]].node.position;
-                var pos1 = nodeDatas[list[list.Count - 2]].node.position;
-                if (Vector3.Distance(targetPos, pos1) < Vector3.Distance(pos0, pos1))
-                    list.RemoveAt(list.Count - 1);
             }
 
             return list;
@@ -86,7 +122,10 @@ namespace Takeover
                 return findPathNodeList;
 
             if (beginNodeIndex == endNodeIndex)
+            {
+                findPathNodeList.Add(endNodeIndex); //起点和终点一样，返回终点
                 return findPathNodeList;
+            }
 
             float[] dist = new float[n];
             int[] prev = new int[n];
@@ -143,7 +182,10 @@ namespace Takeover
 
             // 3) 不可达保护
             if (prev[endNodeIndex] == -1)
+            {
+                findPathNodeList.Add(endNodeIndex);
                 return findPathNodeList;
+            }
 
             // 4) 回溯路径
             int cur = endNodeIndex;
@@ -158,11 +200,23 @@ namespace Takeover
             if (findPathNodeList[findPathNodeList.Count - 1] != beginNodeIndex)
             {
                 findPathNodeList.Clear();
+                findPathNodeList.Add(endNodeIndex);
                 return findPathNodeList;
             }
 
             findPathNodeList.Reverse();
             return findPathNodeList;
+        }
+
+        /// <summary>
+        /// 返回单位从指定位置到目标位置的路径节点列表，注意列表是倒叙的
+        /// </summary>
+        public List<int> GetPathNodeList(Vector2 curPos, Vector2 targetPos)
+        {
+            var list = UpdatePathNodeList(curPos, targetPos);
+            list = new(list);
+            list.Reverse();
+            return list;
         }
 
         /// <summary>
@@ -180,22 +234,6 @@ namespace Takeover
                 if (node.isPathNode)
                     node.node.gameObject.SetActive(true);   // 显示经过的节点
             }
-        }
-
-        public int GetClosestNodeIndex(Vector2 pos)
-        {
-            int closestIndex = -1;
-            float closestDistance = float.MaxValue;
-            for (int i = 0; i < nodeDatas.Length; i++)
-            {
-                float distance = Vector2.Distance(pos, nodeDatas[i].node.position);
-                if (distance < closestDistance)
-                {
-                    closestIndex = i;
-                    closestDistance = distance;
-                }
-            }
-            return closestIndex;
         }
 
         public void HideAllPathNode()

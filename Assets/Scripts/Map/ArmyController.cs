@@ -6,7 +6,7 @@ using static UnityEngine.InputSystem.InputAction;
 
 namespace Takeover
 {
-    public class UnitController : UpdateableComponent
+    public class ArmyController : UpdateableComponent
     {
         private Army selectArmy;
         private Castle selectCastle;
@@ -40,12 +40,11 @@ namespace Takeover
             if (!selectArmy)
                 return;
 
+            // 路径节点吸附
             Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
             Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
-
-            // 路径节点吸附
             Vector3 targetPos = mouseWorldPos;
-            Transform selectUnit = Global.MapPath.GeInRangeUnit(mouseWorldPos);
+            Transform selectUnit = Global.MapPath.GeInRangeNodeTransform(mouseWorldPos);
             if (selectUnit)
                 targetPos = selectUnit.position;
             unitControlLine.Draw(selectArmy.transform.position, targetPos);
@@ -58,7 +57,7 @@ namespace Takeover
 
             // 计算并显示路径节点
             if (pathCalculationCD.IsReady(true))
-                Global.MapPath.UpdatePathNodeVisible(selectArmy.MainUnit.transform.position, mouseWorldPos);
+                Global.MapPath.UpdatePathNodeVisible(selectArmy.MainUnitPosition, mouseWorldPos);
         }
 
         private void StartUnitControl(CallbackContext context)
@@ -81,11 +80,22 @@ namespace Takeover
         private void StopUnitControl(CallbackContext context)
         {
             if (!selectArmy)
+            {
+                StopUnitControl();
                 return;
+            }
 
-            // 移动
-            // var pathNodes = Global.MapPath.GetCurrentPathNodes();
-            // selectArmy.Execute(pathNodes, selectCastle);
+
+            Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
+            Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
+            int nodeIndex = Global.MapPath.GetMouseRangeNodeIndex(mouseWorldPos);
+            if (nodeIndex == -1) //鼠标不在节点范围
+            {
+                StopUnitControl();
+                return;
+            }
+
+            selectArmy.CommandGotoTarget(nodeIndex);
             StopUnitControl();
         }
 

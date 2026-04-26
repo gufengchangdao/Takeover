@@ -56,6 +56,10 @@ public partial class TbGlobalSettingData
     /// 单位路径曲线
     /// </summary>
      public string UnitLineParefabPath => _data.UnitLineParefabPath;
+    /// <summary>
+    /// 单位间距
+    /// </summary>
+     public float UnitDist => _data.UnitDist;
     
     public void ResolveRef(Tables tables)
     {

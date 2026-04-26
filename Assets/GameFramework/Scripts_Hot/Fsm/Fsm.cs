@@ -69,7 +69,7 @@ namespace GameFramework.Hot
         /// <param name="owner">有限状态机持有者。</param>
         /// <param name="states">有限状态机状态集合。</param>
         /// <returns>创建的有限状态机。</returns>
-        public static Fsm<T> Create(string name, T owner, params FsmState<T>[] states)
+        internal static Fsm<T> Create(string name, T owner, params FsmState<T>[] states)
         {
             Fsm<T> fsm = TypeReferencePool.GetOrNew<Fsm<T>>();
             fsm.Name = name;
@@ -89,7 +89,7 @@ namespace GameFramework.Hot
             return fsm;
         }
 
-        public static Fsm<T> Create(T owner, params FsmState<T>[] states)
+        internal static Fsm<T> Create(T owner, params FsmState<T>[] states)
         {
             return Create("", owner, states);
         }

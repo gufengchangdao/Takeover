@@ -90,7 +90,7 @@ public sealed partial class ArmyData : Luban.BeanBase
     /// <summary>
     /// 移速
     /// </summary>
-    public readonly int Speed;
+    public readonly float Speed;
     /// <summary>
     /// 花费
     /// </summary>

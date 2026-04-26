@@ -24,6 +24,7 @@ public sealed partial class GlobalSettingData : Luban.BeanBase
         { if(!_buf["army_prefab_path"].IsString) { throw new SerializationException(); }  ArmyPrefabPath = _buf["army_prefab_path"]; }
         { if(!_buf["unit_path"].IsString) { throw new SerializationException(); }  UnitPath = _buf["unit_path"]; }
         { if(!_buf["unit_line_parefab_path"].IsString) { throw new SerializationException(); }  UnitLineParefabPath = _buf["unit_line_parefab_path"]; }
+        { if(!_buf["unit_dist"].IsNumber) { throw new SerializationException(); }  UnitDist = _buf["unit_dist"]; }
     }
 
     public static GlobalSettingData DeserializeGlobalSettingData(JSONNode _buf)
@@ -59,6 +60,10 @@ public sealed partial class GlobalSettingData : Luban.BeanBase
     /// 单位路径曲线
     /// </summary>
     public readonly string UnitLineParefabPath;
+    /// <summary>
+    /// 单位间距
+    /// </summary>
+    public readonly float UnitDist;
    
     public const int __ID__ = -262071721;
     public override int GetTypeId() => __ID__;
@@ -77,6 +82,7 @@ public sealed partial class GlobalSettingData : Luban.BeanBase
         + "armyPrefabPath:" + ArmyPrefabPath + ","
         + "unitPath:" + UnitPath + ","
         + "unitLineParefabPath:" + UnitLineParefabPath + ","
+        + "unitDist:" + UnitDist + ","
         + "}";
     }
 }
