@@ -1,5 +1,3 @@
-using System;
-
 namespace GameFramework.Hot
 {
     public class GFEvent : GFBaseModule
@@ -14,11 +12,6 @@ namespace GameFramework.Hot
         public void Subscribe<TEvent>(GameEventHandler<TEvent> handler, int priority = 0) where TEvent : GameEvent
         {
             m_EventSupport.Subscribe(handler, priority);
-        }
-
-        public void Subscribe(Type eventType, Delegate handler, int priority = 0)
-        {
-            m_EventSupport.Subscribe(eventType, handler, priority);
         }
 
         public void Unsubscribe<TEvent>(GameEventHandler<TEvent> handler) where TEvent : GameEvent

@@ -4,7 +4,9 @@ namespace GameFramework.Hot
 {
     public class BTConditionNode : BehaviorNode
     {
-        private Func<bool> fn;
+        protected Func<bool> fn;
+
+        protected BTConditionNode() { }
 
         public BTConditionNode(Func<bool> fn)
         {

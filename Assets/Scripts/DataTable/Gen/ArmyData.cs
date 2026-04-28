@@ -38,6 +38,7 @@ public sealed partial class ArmyData : Luban.BeanBase
         BaseArmy_Ref = null;
         { if(!_buf["tech"].IsNumber) { throw new SerializationException(); }  Tech = _buf["tech"]; }
         { if(!_buf["upkeep"].IsNumber) { throw new SerializationException(); }  Upkeep = _buf["upkeep"]; }
+        { if(!_buf["radius"].IsNumber) { throw new SerializationException(); }  Radius = _buf["radius"]; }
     }
 
     public static ArmyData DeserializeArmyData(JSONNode _buf)
@@ -117,6 +118,7 @@ public sealed partial class ArmyData : Luban.BeanBase
     /// 占用的补给数
     /// </summary>
     public readonly int Upkeep;
+    public readonly float Radius;
    
     public const int __ID__ = -1350794489;
     public override int GetTypeId() => __ID__;
@@ -149,6 +151,7 @@ public sealed partial class ArmyData : Luban.BeanBase
         + "baseArmy:" + BaseArmy + ","
         + "tech:" + Tech + ","
         + "upkeep:" + Upkeep + ","
+        + "radius:" + Radius + ","
         + "}";
     }
 }

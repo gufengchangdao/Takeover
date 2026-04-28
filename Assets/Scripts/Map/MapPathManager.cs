@@ -222,12 +222,12 @@ namespace Takeover
         /// <summary>
         /// 返回单位从指定位置到目标位置的路径节点列表，注意列表是倒叙的
         /// </summary>
-        public List<int> GetPathNodeList(Vector2 curPos, Vector2 targetPos)
+        public void UpdatePathNodeList(Vector2 curPos, Vector2 targetPos, List<int> pathList)
         {
             var list = UpdatePathNodeList(curPos, targetPos);
-            list = new(list);
-            list.Reverse();
-            return list;
+            pathList.Clear();
+            pathList.AddRange(list);
+            pathList.Reverse();
         }
 
         /// <summary>

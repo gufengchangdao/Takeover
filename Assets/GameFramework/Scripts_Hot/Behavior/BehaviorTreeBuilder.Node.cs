@@ -1,3 +1,5 @@
+using System;
+
 namespace GameFramework.Hot
 {
     public partial class BehaviorTreeBuilder
@@ -10,9 +12,7 @@ namespace GameFramework.Hot
         }
         public BehaviorTreeBuilder Seletctor()
         {
-            var tp = new BTSelectorNode();
-            AddNode(tp);
-            return this;
+            return AddNode(new BTSelectorNode());
         }
         public BehaviorTreeBuilder Filter()
         {
@@ -62,6 +62,34 @@ namespace GameFramework.Hot
         {
             AddNode(new BTPrioritySelectorNode(period, noscatter));
             return this;
+        }
+
+        public BehaviorTreeBuilder Action(Action action)
+        {
+            return AddNode(new BTActionNode(action));
+        }
+
+        public BehaviorTreeBuilder Condition(Func<bool> fn)
+        {
+            return AddNode(new BTConditionNode(fn));
+        }
+
+        public BehaviorTreeBuilder DoIf(Func<bool> fn, Action action)
+        {
+            return
+                Sequence()
+                    .Condition(fn)
+                    .Action(action)
+                .Back();
+        }
+
+        public BehaviorTreeBuilder If(Func<bool> fn, BehaviorNode node)
+        {
+            return
+                Sequence()
+                    .Condition(fn)
+                    .AddNode(node)
+                .Back();
         }
     }
 }

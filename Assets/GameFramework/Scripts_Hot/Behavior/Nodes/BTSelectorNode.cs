@@ -1,4 +1,3 @@
-
 namespace GameFramework.Hot
 {
     /// <summary>

@@ -3,7 +3,6 @@ using GameFramework.AOT;
 using GameFramework.Hot;
 using TableStructure;
 using UnityEngine;
-using UnityEngine.U2D;
 
 namespace Takeover
 {
@@ -74,12 +73,12 @@ namespace Takeover
             }
         }
 
-        public List<int> CurPathList { get; private set; }
+        public List<int> CurPathList { get; private set; } = new();
 
-        public bool WantToMove => CurPathList != null && CurPathList.Count > 0;
+        public bool WantToMove => CurPathList.Count > 0;
 
+        public float Radius { get; private set; }
 
-        private Fsm<Army> fsm;
         private BehaviorTree behaviorTree;
 
         void Awake()
@@ -91,20 +90,20 @@ namespace Takeover
         {
             TableId = armyId;
             this.Camp = camp;
+            var armyData = GFGlobal.Tables.TbArmyData[TableId];
+            AttackRange = armyData.AttackRange;
+            Radius = armyData.Radius;
+
             InitUnits();
             InitFormation();
 
-            fsm = GFGlobal.Fsm.CreateFsm(this,
-                new ArmyStates.Idle(),
-                new ArmyStates.Move(),
-                new ArmyStates.AtFort(),
-                new ArmyStates.Attack()
-            );
-            fsm.ChangeState<ArmyStates.Idle>();
-
             behaviorTree = new BehaviorTreeBuilder()
                 .Repeat(-1)
-                    .PrioritySelector(0.5f)
+                    .Condition(() => !IsAllUnitDead)
+                        .Seletctor()
+                            .If(() => HasTarget, new BTArmyChaseAndAttackNode(this))
+                            .If(() => WantToMove, new BTArmyMoveNode(this))
+                            .Action(IdleAction)
                 .End();
         }
 
@@ -115,9 +114,6 @@ namespace Takeover
                 CurCastle.OnArmyExit(this);
                 CurCastle = null;
             }
-
-            GFGlobal.Fsm.DestroyFsm(fsm);
-            fsm = null;
 
             foreach (var unit in Units)
                 if (unit)
@@ -130,39 +126,10 @@ namespace Takeover
         {
             base.OnUpdate(dt);
 
+            UpdateNearTargets();
+
             if (!behaviorTree.IsTerminated)
                 behaviorTree.Tick();
-        }
-
-        // 更新行为，充当一个简单的行为树吧
-        private void BehaviorUpdate(float dt)
-        {
-            if (InCombat)
-            {
-
-            }
-            else
-            {
-                if (WantToMove)
-                {
-                    fsm.ChangeState<ArmyStates.Move>();
-                    return;
-                }
-
-                if (!WantToMove)
-                {
-                    if (InCastle)
-                    {
-                        fsm.ChangeState<ArmyStates.AtFort>();
-                        return;
-                    }
-                    else
-                    {
-                        fsm.ChangeState<ArmyStates.Idle>();
-                        return;
-                    }
-                }
-            }
         }
 
         public Unit GetMainUnit()
@@ -247,7 +214,7 @@ namespace Takeover
                 ExitCastle();
             }
 
-            CurPathList = Global.MapPath.GetPathNodeList(MainUnitPosition, Global.MapPath.GetNodePosition(targetNodeIndex));
+            Global.MapPath.UpdatePathNodeList(MainUnitPosition, Global.MapPath.GetNodePosition(targetNodeIndex), CurPathList);
             // behaviorCD.SetDone(); //立即更新行为
         }
     }
