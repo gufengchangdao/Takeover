@@ -21,6 +21,7 @@ namespace GameFramework.Hot
         public static GFInput Input { get; private set; }
         public static GFFsm Fsm { get; private set; }
         public static GFProcedure Procedure { get; private set; }
+        public static GFBehaviorTree BehaviorTree { get; private set; }
         public static GFUI UI { get; private set; }
         public static Camera UICamera => UI.UICamera;
         public static GFSound Sound { get; private set; }
@@ -66,6 +67,7 @@ namespace GameFramework.Hot
             Input.ModuleUpdate();
             Fsm.ModuleUpdate();
             Procedure.ModuleUpdate();
+            BehaviorTree.ModuleUpdate();
             UI.ModuleUpdate();
             Sound.ModuleUpdate();
             Scene.ModuleUpdate();
@@ -83,6 +85,7 @@ namespace GameFramework.Hot
             Input = AddModuleComponent<GFInput>("Input");
             Fsm = AddModuleComponent<GFFsm>("Fsm");
             Procedure = AddModuleComponent<GFProcedure>("Procedure");
+            BehaviorTree = AddModuleComponent<GFBehaviorTree>("BehaviorTree");
             UI = AddModuleComponent<GFUI>("UI");
             Sound = AddModuleComponent<GFSound>("Sound");
             Scene = AddModuleComponent<GFScene>("Scene");

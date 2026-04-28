@@ -1,24 +1,31 @@
-using System.Collections.Generic;
-using TableStructure;
+using GameFramework.AOT;
+using GameFramework.Hot;
 using UnityEngine;
+using UnityEngine.U2D;
 
 namespace Takeover
 {
-    public class ArmyHealthBar : MonoBehaviour
+    public class ArmyHealthBar : UpdateableComponent
     {
         public const float HEALTH_BAR_HEIGHT = 1;
-        public const float HEALTH_BAR_CASTLE_HEIGHT = HEALTH_BAR_HEIGHT + 0.4f;
+        private const float ICON_SPACING = 0.1f;
 
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private Camp camp;
         [SerializeField] private SpriteRenderer imgIcon;
 
+        private Army army;
+
         private static int SHADER_CLIP_ID = Shader.PropertyToID("_ClipUvUp");
 
-        public void Init(ECamp camp, Sprite icon)
+        protected override void Start()
         {
-            this.camp.CurCamp = camp;
-            imgIcon.sprite = icon;
+            base.Start();
+            army = GetComponentInParent<Army>();
+            camp.CurCamp = army.Camp;
+            var atlas = GFGlobal.Resource.LoadAssetSync<SpriteAtlas>(GFGlobal.Tables.TbGlobalSettingData.ArmyIconPath);
+            imgIcon.sprite = atlas.GetSprite(army.TableId);
+            OnLateUpdate(0);
         }
 
         public void SetHealthPercent(float percent)
@@ -29,8 +36,12 @@ namespace Takeover
         private float lastHealthPercent = -1;
 
         // 更新血量和位置
-        public void UpdateHealthAndPosition(List<Unit> units, float healthPercent, Castle castle)
+        public override void OnLateUpdate(float dt)
         {
+            float healthPercent = army.HealthPercent;
+            Castle castle = army.CurCastle;
+            var units = army.Units;
+
             if (!Mathf.Approximately(lastHealthPercent, healthPercent))
             {
                 lastHealthPercent = healthPercent;
@@ -39,8 +50,14 @@ namespace Takeover
 
             if (castle)
             {
-                var pos = castle.transform.position;
-                transform.position = new Vector2(pos.x, pos.y + HEALTH_BAR_CASTLE_HEIGHT);
+                int index = castle.Defenders.IndexOf(army);
+                var anchor = castle.NodeMap.GetTransform("ArmyIconPos").transform.position;
+                float width = spriteRenderer.bounds.size.x;
+                int count = castle.Defenders.Count;
+                float totalWidth = count * width + (count - 1) * ICON_SPACING;
+                float leftX = anchor.x - totalWidth / 2 + width / 2;
+                float x = leftX + index * (width + ICON_SPACING);
+                transform.position = new Vector2(x, anchor.y);
             }
             else
             {
@@ -59,7 +76,6 @@ namespace Takeover
                 }
                 transform.position = new Vector2(x / count, y / count + HEALTH_BAR_HEIGHT);
             }
-
         }
     }
 }

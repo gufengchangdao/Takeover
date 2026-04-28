@@ -30,6 +30,19 @@ namespace Takeover
 
         public int UnitCount => Units.Count;
 
+        public bool IsAllUnitDead
+        {
+            get
+            {
+                for (int i = 0; i < Units.Count; i++)
+                {
+                    if (!Units[i].IsDead)
+                        return false;
+                }
+                return true;
+            }
+        }
+
         public Vector2 MainUnitPosition
         {
             get
@@ -65,9 +78,9 @@ namespace Takeover
 
         public bool WantToMove => CurPathList != null && CurPathList.Count > 0;
 
-        private CooldownTimer behaviorCD = new(0.5f);
 
         private Fsm<Army> fsm;
+        private BehaviorTree behaviorTree;
 
         void Awake()
         {
@@ -80,15 +93,19 @@ namespace Takeover
             this.Camp = camp;
             InitUnits();
             InitFormation();
-            InitHealthBar();
 
             fsm = GFGlobal.Fsm.CreateFsm(this,
-            new ArmyStates.Idle(),
-            new ArmyStates.Move(),
-            new ArmyStates.AtFort(),
-            new ArmyStates.Attack());
-
+                new ArmyStates.Idle(),
+                new ArmyStates.Move(),
+                new ArmyStates.AtFort(),
+                new ArmyStates.Attack()
+            );
             fsm.ChangeState<ArmyStates.Idle>();
+
+            behaviorTree = new BehaviorTreeBuilder()
+                .Repeat(-1)
+                    .PrioritySelector(0.5f)
+                .End();
         }
 
         protected override void OnDestroy()
@@ -113,9 +130,8 @@ namespace Takeover
         {
             base.OnUpdate(dt);
 
-            if (behaviorCD.IsReady())
-                BehaviorUpdate(behaviorCD.Interval);
-
+            if (!behaviorTree.IsTerminated)
+                behaviorTree.Tick();
         }
 
         // 更新行为，充当一个简单的行为树吧
@@ -147,11 +163,6 @@ namespace Takeover
                     }
                 }
             }
-        }
-
-        public override void OnLateUpdate(float dt)
-        {
-            HealthBar.UpdateHealthAndPosition(Units, HealthPercent, CurCastle);
         }
 
         public Unit GetMainUnit()
@@ -190,13 +201,6 @@ namespace Takeover
             {
                 unit.OnEnterCastle(CurCastle);
             }
-        }
-
-        private void InitHealthBar()
-        {
-            var atlas = GFGlobal.Resource.LoadAssetSync<SpriteAtlas>(GFGlobal.Tables.TbGlobalSettingData.ArmyIconPath);
-            HealthBar.Init(Camp, atlas.GetSprite(TableId));
-            HealthBar.SetHealthPercent(1);
         }
 
         // 进入城堡
@@ -244,7 +248,7 @@ namespace Takeover
             }
 
             CurPathList = Global.MapPath.GetPathNodeList(MainUnitPosition, Global.MapPath.GetNodePosition(targetNodeIndex));
-            behaviorCD.SetDone(); //立即更新行为
+            // behaviorCD.SetDone(); //立即更新行为
         }
     }
 }

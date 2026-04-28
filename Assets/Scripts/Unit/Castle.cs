@@ -19,6 +19,7 @@ namespace Takeover
         public string TableId => _tableId;
 
         public UnitHealth Health { get; private set; }
+        public NodeMap NodeMap { get; private set; }
 
         private Camp campComp;
         public ECamp Camp => campComp.CurCamp;
@@ -55,6 +56,7 @@ namespace Takeover
         {
             campComp = GetComponent<Camp>();
             Health = GetComponent<UnitHealth>();
+            NodeMap = GetComponent<NodeMap>();
         }
 
         public void OnArmyEnter(Army army)

@@ -16,6 +16,11 @@ namespace GameFramework.Hot
             m_EventSupport.Subscribe(handler, priority);
         }
 
+        public void Subscribe(Type eventType, Delegate handler, int priority = 0)
+        {
+            m_EventSupport.Subscribe(eventType, handler, priority);
+        }
+
         public void Unsubscribe<TEvent>(GameEventHandler<TEvent> handler) where TEvent : GameEvent
         {
             m_EventSupport.Unsubscribe(handler);
